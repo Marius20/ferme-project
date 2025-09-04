@@ -1,0 +1,203 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ betail.numeroIdentification }} - Détail Bétail - {{ parent() }}{% endblock %}
+
+{% block page_title %}
+    <div class="flex items-center">
+        {% if betail.type == 'bovin' %}🐄
+        {% elseif betail.type == 'ovin' %}🐑  
+        {% elseif betail.type == 'caprin' %}🐐
+        {% elseif betail.type == 'porcin' %}🐷
+        {% elseif betail.type == 'equin' %}🐎
+        {% else %}🐾
+        {% endif %}
+        <span class="ml-3">{{ betail.numeroIdentification }}</span>
+    </div>
+{% endblock %}
+
+{% block page_subtitle %}
+    {{ betail.sousType|replace('_', ' ')|title }} {{ betail.race }} - 
+    {% if betail.zone %}
+        {{ betail.zone.batiment.nom }}, {{ betail.zone.nom }}
+    {% else %}
+        {{ betail.ferme.nom }}
+    {% endif %}
+{% endblock %}
+
+{% block header_actions %}
+    <div class="flex space-x-3">
+        <a href="{{ path('betail_index') }}" class="btn btn-outline">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+            </svg>
+            Retour à la liste
+        </a>
+        <button class="btn btn-primary">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+            </svg>
+            Modifier
+        </button>
+    </div>
+{% endblock %}
+
+{% block body %}
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Informations principales -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Informations générales -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Informations générales</h3>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-sm font-medium text-gray-500">Numéro d'identification</label>
+                            <p class="text-lg font-semibold text-gray-900">{{ betail.numeroIdentification }}</p>
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium text-gray-500">Type</label>
+                            <p class="text-lg font-semibold text-gray-900">{{ betail.type|title }}</p>
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium text-gray-500">Sous-type</label>
+                            <p class="text-lg font-semibold text-gray-900">{{ betail.sousType|replace('_', ' ')|title }}</p>
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium text-gray-500">Race</label>
+                            <p class="text-lg font-semibold text-gray-900">{{ betail.race }}</p>
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium text-gray-500">Sexe</label>
+                            <p class="text-lg font-semibold text-gray-900">
+                                {{ betail.sexe == 'male' ? 'Mâle' : 'Femelle' }}
+                            </p>
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium text-gray-500">Âge</label>
+                            <p class="text-lg font-semibold text-gray-900">{{ betail.age }} ans</p>
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium text-gray-500">Mode d'exploitation</label>
+                            <p class="text-lg font-semibold text-gray-900">{{ betail.mode|title }}</p>
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium text-gray-500">Statut</label>
+                            <span class="inline-flex px-3 py-1 text-sm font-semibold rounded-full 
+                                {% if betail.statut == 'actif' %}bg-green-100 text-green-800
+                                {% elseif betail.statut == 'vendu' %}bg-blue-100 text-blue-800
+                                {% elseif betail.statut == 'mort' %}bg-red-100 text-red-800
+                                {% elseif betail.statut == 'reforme' %}bg-yellow-100 text-yellow-800
+                                {% else %}bg-gray-100 text-gray-800
+                                {% endif %}">
+                                {{ betail.statut|title }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Localisation -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Localisation</h3>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-sm font-medium text-gray-500">Ferme</label>
+                            <p class="text-lg font-semibold text-gray-900">{{ betail.ferme.nom }}</p>
+                        </div>
+                        {% if betail.zone %}
+                        <div>
+                            <label class="text-sm font-medium text-gray-500">Bâtiment</label>
+                            <p class="text-lg font-semibold text-gray-900">{{ betail.zone.batiment.nom }}</p>
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium text-gray-500">Zone</label>
+                            <p class="text-lg font-semibold text-gray-900">{{ betail.zone.nom }}</p>
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium text-gray-500">Zone de ferme</label>
+                            <p class="text-lg font-semibold text-gray-900">{{ betail.zone.batiment.zoneFerme.nom }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Poids et mesures -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Poids et mesures</h3>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-sm font-medium text-gray-500">Poids à l'entrée</label>
+                            <p class="text-lg font-semibold text-gray-900">
+                                {{ betail.poidsEntree ? (betail.poidsEntree|number_format(1, ',', ' ') ~ ' kg') : 'Non renseigné' }}
+                            </p>
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium text-gray-500">Date d'entrée</label>
+                            <p class="text-lg font-semibold text-gray-900">{{ betail.dateEntree|date('d/m/Y') }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="space-y-6">
+            <!-- Actions rapides -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Actions rapides</h3>
+                </div>
+                <div class="p-4 space-y-3">
+                    <button class="w-full btn btn-outline btn-sm">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        Ajouter un soin
+                    </button>
+                    <button class="w-full btn btn-outline btn-sm">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4V2a1 1 0 011-1h4a1 1 0 011 1v2h4a1 1 0 011 1v2a1 1 0 01-1 1H7a1 1 0 01-1-1V5a1 1 0 011-1z"></path>
+                        </svg>
+                        Programmer alimentation
+                    </button>
+                    <button class="w-full btn btn-outline btn-sm">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                        Programmer vente
+                    </button>
+                    <button class="w-full btn btn-outline btn-sm">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3a1 1 0 011-1h6a1 1 0 011 1v4h3a1 1 0 011 1v9a2 2 0 01-2 2H5a2 2 0 01-2-2V8a1 1 0 011-1h3z"></path>
+                        </svg>
+                        Changer de zone
+                    </button>
+                </div>
+            </div>
+
+            <!-- Résumé récent -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Activité récente</h3>
+                </div>
+                <div class="p-4">
+                    <div class="text-sm text-gray-500 text-center py-8">
+                        <svg class="w-8 h-8 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        Aucune activité récente
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

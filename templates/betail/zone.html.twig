@@ -1,0 +1,260 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ zone.nom }} - {{ batiment.nom }} - {{ parent() }}{% endblock %}
+
+{% block page_title %}
+    <div class="flex items-center">
+        {% if batiment.type == 'etable' %}🏠
+        {% elseif batiment.type == 'ecurie' %}🏇
+        {% elseif batiment.type == 'bergerie' %}🐑
+        {% elseif batiment.type == 'chevrerie' %}🐐
+        {% elseif batiment.type == 'porcherie' %}🐷
+        {% elseif batiment.type == 'poulailler' %}🐔
+        {% else %}🏢
+        {% endif %}
+        <span class="ml-3">{{ zone.nom }}</span>
+    </div>
+{% endblock %}
+
+{% block page_subtitle %}
+    {{ batiment.nom }} • {{ ferme.nom }} • {{ zone.numeroIdentification }}
+{% endblock %}
+
+{% block header_actions %}
+    <div class="flex space-x-3">
+        <a href="{{ path('betail_ferme', {id: ferme.id}) }}" class="btn btn-outline">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+            </svg>
+            Retour à la ferme
+        </a>
+        <button class="btn btn-primary">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+            Ajouter Bétail
+        </button>
+    </div>
+{% endblock %}
+
+{% block body %}
+    <!-- Informations de la zone -->
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
+        <div class="lg:col-span-3">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Informations de la zone</h3>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="text-sm font-medium text-gray-500">Type de zone</label>
+                            <p class="text-lg font-semibold text-gray-900">{{ zone.type|replace('_', ' ')|title }}</p>
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium text-gray-500">Superficie</label>
+                            <p class="text-lg font-semibold text-gray-900">
+                                {{ zone.superficie ? (zone.superficie ~ ' m²') : 'Non renseignée' }}
+                            </p>
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium text-gray-500">Statut</label>
+                            <span class="inline-flex px-3 py-1 text-sm font-semibold rounded-full 
+                                {% if zone.statut == 'disponible' %}bg-green-100 text-green-800
+                                {% elseif zone.statut == 'occupe' %}bg-blue-100 text-blue-800
+                                {% elseif zone.statut == 'maintenance' %}bg-yellow-100 text-yellow-800
+                                {% elseif zone.statut == 'desinfection' %}bg-purple-100 text-purple-800
+                                {% else %}bg-gray-100 text-gray-800
+                                {% endif %}">
+                                {{ zone.statut|title }}
+                            </span>
+                        </div>
+                        {% if zone.description %}
+                        <div class="md:col-span-3">
+                            <label class="text-sm font-medium text-gray-500">Description</label>
+                            <p class="text-gray-900">{{ zone.description }}</p>
+                        </div>
+                        {% endif %}
+                        {% if zone.equipements %}
+                        <div class="md:col-span-3">
+                            <label class="text-sm font-medium text-gray-500">Équipements</label>
+                            <p class="text-gray-900">{{ zone.equipements }}</p>
+                        </div>
+                        {% endif %}
+                        {% if zone.conditions %}
+                        <div class="md:col-span-3">
+                            <label class="text-sm font-medium text-gray-500">Conditions</label>
+                            <p class="text-gray-900">{{ zone.conditions }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistiques de la zone -->
+        <div class="space-y-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Occupation</h3>
+                </div>
+                <div class="p-6">
+                    <div class="text-center">
+                        <div class="text-3xl font-bold text-blue-600 mb-2">
+                            {{ zone.effectifActuel }}
+                        </div>
+                        <div class="text-sm text-gray-500">
+                            {% if zone.capaciteMaximale %}
+                                / {{ zone.capaciteMaximale }} places
+                            {% else %}
+                                bétail présent
+                            {% endif %}
+                        </div>
+                        {% if zone.capaciteMaximale %}
+                            <div class="mt-4">
+                                <div class="bg-gray-200 rounded-full h-2">
+                                    <div class="bg-blue-600 h-2 rounded-full" style="width: {{ zone.tauxOccupation }}%"></div>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">{{ zone.tauxOccupation|number_format(1) }}% occupé</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Actions</h3>
+                </div>
+                <div class="p-4 space-y-3">
+                    <button class="w-full btn btn-outline btn-sm">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3a1 1 0 011-1h6a1 1 0 011 1v4h3a1 1 0 011 1v9a2 2 0 01-2 2H5a2 2 0 01-2-2V8a1 1 0 011-1h3z"></path>
+                        </svg>
+                        Déplacer bétail
+                    </button>
+                    <button class="w-full btn btn-outline btn-sm">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                        Modifier zone
+                    </button>
+                    <button class="w-full btn btn-outline btn-sm">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        Générer rapport
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liste du bétail dans la zone -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Bétail présent dans la zone</h3>
+        </div>
+        
+        {% if betails|length > 0 %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bétail</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Âge</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Poids</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mode</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for betail in betails %}
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0 h-10 w-10">
+                                            <div class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                                                {% if betail.type == 'bovin' %}🐄
+                                                {% elseif betail.type == 'ovin' %}🐑
+                                                {% elseif betail.type == 'caprin' %}🐐
+                                                {% elseif betail.type == 'porcin' %}🐷
+                                                {% elseif betail.type == 'equin' %}🐎
+                                                {% else %}🐾
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="ml-4">
+                                            <div class="text-sm font-medium text-gray-900">
+                                                {{ betail.numeroIdentification }}
+                                            </div>
+                                            <div class="text-sm text-gray-500">
+                                                {{ betail.race }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-900">{{ betail.sousType|replace('_', ' ')|title }}</div>
+                                    <div class="text-sm text-gray-500">{{ betail.sexe == 'male' ? 'Mâle' : 'Femelle' }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    {{ betail.age }} ans
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    {{ betail.poidsEntree ? (betail.poidsEntree|number_format(1, ',', ' ') ~ ' kg') : '-' }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    {{ betail.mode|title }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full 
+                                        {% if betail.statut == 'actif' %}bg-green-100 text-green-800
+                                        {% elseif betail.statut == 'vendu' %}bg-blue-100 text-blue-800
+                                        {% elseif betail.statut == 'mort' %}bg-red-100 text-red-800
+                                        {% elseif betail.statut == 'reforme' %}bg-yellow-100 text-yellow-800
+                                        {% else %}bg-gray-100 text-gray-800
+                                        {% endif %}">
+                                        {{ betail.statut|title }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <div class="flex items-center justify-end space-x-2">
+                                        <a href="{{ path('betail_show', {id: betail.id}) }}" class="text-indigo-600 hover:text-indigo-900" title="Voir détails">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                            </svg>
+                                        </a>
+                                        <button class="text-green-600 hover:text-green-900" title="Modifier">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                            </svg>
+                                        </button>
+                                        <button class="text-orange-600 hover:text-orange-900" title="Déplacer">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3a1 1 0 011-1h6a1 1 0 011 1v4h3a1 1 0 011 1v9a2 2 0 01-2 2H5a2 2 0 01-2-2V8a1 1 0 011-1h3z"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="p-12 text-center">
+                <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+                </svg>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">Aucun bétail dans cette zone</h3>
+                <p class="text-gray-500 mb-4">Cette zone est actuellement vide.</p>
+                <button class="btn btn-primary">Ajouter du bétail</button>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

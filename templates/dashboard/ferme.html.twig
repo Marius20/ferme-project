@@ -1,0 +1,409 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Dashboard - {{ ferme.nom }} - {{ parent() }}{% endblock %}
+
+{% block page_title %}🏢 {{ ferme.nom }}{% endblock %}
+{% block page_subtitle %}Tableau de bord de la ferme • {{ ferme.localisation }}{% endblock %}
+
+{% block header_actions %}{% endblock %}
+
+{% block body %}
+    <!-- Statistiques principales -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Bétail -->
+        <div class="stat-card">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <span class="text-xl">🐄</span>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Bétail Total</p>
+                    <p class="text-3xl font-bold text-gray-900">{{ statistiques.betail.total }}</p>
+                </div>
+            </div>
+            <div class="mt-3">
+                <a href="{{ path('betail_index', {fermeId: ferme.id}) }}" class="text-sm text-blue-600 hover:text-blue-800">
+                    Gérer le bétail →
+                </a>
+            </div>
+        </div>
+
+        <!-- Bâtiments -->
+        <div class="stat-card">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                        <span class="text-xl">🏢</span>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Bâtiments</p>
+                    <p class="text-3xl font-bold text-gray-900">{{ statistiques.batiments.total }}</p>
+                </div>
+            </div>
+            <div class="mt-3">
+                <span class="text-sm text-gray-600">
+                    {% if statistiques.batiments.occupation %}
+                        {{ statistiques.batiments.occupation.taux_moyen|number_format(1) }}% occupation
+                    {% else %}
+                        Voir détails
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+
+        <!-- Volailles -->
+        <div class="stat-card">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
+                        <span class="text-xl">🐔</span>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Volailles</p>
+                    <p class="text-3xl font-bold text-gray-900">{{ statistiques.volailles.total_effectif }}</p>
+                </div>
+            </div>
+            <div class="mt-3">
+                <span class="text-sm text-gray-600">{{ statistiques.volailles.total_lots }} lot(s)</span>
+            </div>
+        </div>
+
+        <!-- Finances -->
+        <div class="stat-card">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                        <span class="text-xl">💰</span>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Bénéfice Mensuel</p>
+                    <p class="text-2xl font-bold {{ statistiques.finances.benefice_mois >= 0 ? 'text-green-600' : 'text-red-600' }}">
+                        {{ statistiques.finances.benefice_mois >= 0 ? '+' : '' }}{{ (statistiques.finances.benefice_mois * 655.957)|number_format(0, ',', ' ') }} F CFA
+                    </p>
+                </div>
+            </div>
+            <div class="mt-3">
+                <span class="text-sm text-gray-600">
+                    {{ (statistiques.finances.recettes_mois * 655.957)|number_format(0, ',', ' ') }} F CFA recettes
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Layout 2 colonnes - Informations ferme + Transactions récentes étendues -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Colonne gauche - Informations ferme -->
+        <div class="space-y-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="text-base font-medium text-gray-900">Informations ferme</h3>
+                </div>
+                <div class="p-6 space-y-3">
+                    <div>
+                        <dt class="text-xs font-medium text-gray-500 uppercase tracking-wide">Nom</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ ferme.nom }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-xs font-medium text-gray-500 uppercase tracking-wide">Type</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ ferme.type ? (ferme.type|replace({'_': ' '})|title) : 'Non défini' }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-xs font-medium text-gray-500 uppercase tracking-wide">Localisation</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ ferme.localisation }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-xs font-medium text-gray-500 uppercase tracking-wide">Superficie</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ ferme.superficie }} hectares</dd>
+                    </div>
+                    <div>
+                        <dt class="text-xs font-medium text-gray-500 uppercase tracking-wide">Créée le</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ ferme.dateCreation|date('d/m/Y') }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-xs font-medium text-gray-500 uppercase tracking-wide">Bétail total</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ statistiques.betail.total }} animaux</dd>
+                    </div>
+                    {% if ferme.description %}
+                    <div>
+                        <dt class="text-xs font-medium text-gray-500 uppercase tracking-wide">Description</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ ferme.description }}</dd>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Colonnes centre + droite - Transactions récentes étendues sur 2 colonnes -->
+        <div class="lg:col-span-2 space-y-6">
+            {% if transactions_recentes|length > 0 %}
+                <div class="card">
+                    <div class="card-header">
+                        <div class="mb-4">
+                            <h3 class="text-lg font-medium text-gray-900 mb-2">Transactions récentes</h3>
+                            <a href="{{ path('finances') }}" class="text-sm text-blue-600 hover:text-blue-800">Voir toutes mes transactions →</a>
+                        </div>
+                        
+                        <!-- Sélecteur de dates style réservation d'avion -->
+                        <div class="flex items-center space-x-4" x-data="{ 
+                            showCalendar: false, 
+                            dateDebut: '', 
+                            dateFin: '',
+                            selectingStart: true,
+                            currentMonth: new Date().getMonth(),
+                            currentYear: new Date().getFullYear(),
+                            today: new Date(),
+                            formatDate: function(date) {
+                                if (!date) return '';
+                                const d = new Date(date + 'T00:00:00');
+                                return d.toLocaleDateString('fr-FR');
+                            },
+                            formatForInput: function(date) {
+                                if (!date) return '';
+                                const d = new Date(date + 'T00:00:00');
+                                return d.toISOString().split('T')[0];
+                            },
+                            getDaysInMonth: function(month, year) {
+                                return new Date(year, month + 1, 0).getDate();
+                            },
+                            getFirstDayOfMonth: function(month, year) {
+                                return new Date(year, month, 1).getDay();
+                            },
+                            isDateInRange: function(date) {
+                                if (!this.dateDebut || !this.dateFin) return false;
+                                const checkDate = new Date(this.currentYear, this.currentMonth, date);
+                                const start = new Date(this.dateDebut + 'T00:00:00');
+                                const end = new Date(this.dateFin + 'T00:00:00');
+                                return checkDate >= start && checkDate <= end;
+                            },
+                            isStartDate: function(date) {
+                                if (!this.dateDebut) return false;
+                                const checkDate = new Date(this.currentYear, this.currentMonth, date);
+                                const start = new Date(this.dateDebut + 'T00:00:00');
+                                return checkDate.getTime() === start.getTime();
+                            },
+                            isEndDate: function(date) {
+                                if (!this.dateFin) return false;
+                                const checkDate = new Date(this.currentYear, this.currentMonth, date);
+                                const end = new Date(this.dateFin + 'T00:00:00');
+                                return checkDate.getTime() === end.getTime();
+                            },
+                            selectDate: function(date) {
+                                const selectedDate = new Date(this.currentYear, this.currentMonth, date).toISOString().split('T')[0];
+                                if (this.selectingStart || !this.dateDebut) {
+                                    this.dateDebut = selectedDate;
+                                    this.dateFin = '';
+                                    this.selectingStart = false;
+                                } else {
+                                    if (new Date(selectedDate) < new Date(this.dateDebut)) {
+                                        this.dateDebut = selectedDate;
+                                        this.dateFin = '';
+                                    } else {
+                                        this.dateFin = selectedDate;
+                                    }
+                                }
+                            },
+                            previousMonth: function() {
+                                if (this.currentMonth === 0) {
+                                    this.currentMonth = 11;
+                                    this.currentYear--;
+                                } else {
+                                    this.currentMonth--;
+                                }
+                            },
+                            nextMonth: function() {
+                                if (this.currentMonth === 11) {
+                                    this.currentMonth = 0;
+                                    this.currentYear++;
+                                } else {
+                                    this.currentMonth++;
+                                }
+                            },
+                            monthNames: ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'],
+                            dayNames: ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'],
+                            applyFilter: function() {
+                                this.showCalendar = false;
+                                console.log('Filtrage de', this.dateDebut, 'à', this.dateFin);
+                            }
+                        }">
+                            <div class="flex items-center space-x-2">
+                                <label class="text-sm font-medium text-gray-700">Période:</label>
+                                <button @click="showCalendar = !showCalendar; selectingStart = true" 
+                                        class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                    <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 002 2v12a2 2 0 002 2z"></path>
+                                    </svg>
+                                    <span x-text="dateDebut && dateFin ? formatDate(dateDebut) + ' - ' + formatDate(dateFin) : 'Sélectionner une période'"></span>
+                                    <svg class="w-4 h-4 ml-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                            
+                            <!-- Calendrier style réservation d'avion -->
+                            <div x-show="showCalendar" 
+                                 x-transition:enter="transition ease-out duration-200"
+                                 x-transition:enter-start="opacity-0 scale-95"
+                                 x-transition:enter-end="opacity-100 scale-100"
+                                 x-transition:leave="transition ease-in duration-150"
+                                 x-transition:leave-start="opacity-100 scale-100"
+                                 x-transition:leave-end="opacity-0 scale-95"
+                                 @click.away="showCalendar = false"
+                                 class="absolute top-full left-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 z-50"
+                                 style="width: 320px; display: none;">
+                                
+                                <div class="p-4">
+                                    <!-- Header du calendrier -->
+                                    <div class="flex items-center justify-between mb-4">
+                                        <button @click="previousMonth()" 
+                                                class="p-1 hover:bg-gray-100 rounded-full transition-colors">
+                                            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                                            </svg>
+                                        </button>
+                                        <h3 class="text-lg font-semibold text-gray-900" x-text="monthNames[currentMonth] + ' ' + currentYear"></h3>
+                                        <button @click="nextMonth()" 
+                                                class="p-1 hover:bg-gray-100 rounded-full transition-colors">
+                                            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    
+                                    <!-- En-têtes des jours -->
+                                    <div class="grid grid-cols-7 gap-1 mb-2">
+                                        <template x-for="day in dayNames" :key="day">
+                                            <div class="text-center text-xs font-medium text-gray-500 py-2" x-text="day"></div>
+                                        </template>
+                                    </div>
+                                    
+                                    <!-- Grille du calendrier -->
+                                    <div class="grid grid-cols-7 gap-1">
+                                        <!-- Espaces vides pour les jours avant le 1er du mois -->
+                                        <template x-for="empty in getFirstDayOfMonth(currentMonth, currentYear)" :key="'empty-' + empty">
+                                            <div class="h-8"></div>
+                                        </template>
+                                        
+                                        <!-- Jours du mois -->
+                                        <template x-for="day in getDaysInMonth(currentMonth, currentYear)" :key="day">
+                                            <button @click="selectDate(day)"
+                                                    class="h-8 text-sm rounded-full flex items-center justify-center transition-all duration-200 hover:bg-blue-100"
+                                                    :class="{
+                                                        'bg-blue-600 text-white': isStartDate(day) || isEndDate(day),
+                                                        'bg-blue-100 text-blue-800': isDateInRange(day) && !isStartDate(day) && !isEndDate(day),
+                                                        'text-gray-900 hover:bg-blue-50': !isDateInRange(day) && !isStartDate(day) && !isEndDate(day),
+                                                        'text-gray-400 cursor-not-allowed': new Date(currentYear, currentMonth, day) < today && !isDateInRange(day)
+                                                    }"
+                                                    x-text="day">
+                                            </button>
+                                        </template>
+                                    </div>
+                                    
+                                    <!-- Instructions -->
+                                    <div class="mt-4 text-sm text-gray-600 text-center">
+                                        <span x-show="!dateDebut">Sélectionnez la date de début</span>
+                                        <span x-show="dateDebut && !dateFin">Sélectionnez la date de fin</span>
+                                        <span x-show="dateDebut && dateFin">
+                                            <span x-text="formatDate(dateDebut) + ' - ' + formatDate(dateFin)"></span>
+                                        </span>
+                                    </div>
+                                    
+                                    <!-- Boutons d'action -->
+                                    <div class="flex justify-between items-center mt-4 pt-4 border-t border-gray-200">
+                                        <button @click="dateDebut = ''; dateFin = ''; selectingStart = true" 
+                                                class="text-sm text-gray-500 hover:text-gray-700">
+                                            Effacer
+                                        </button>
+                                        <button @click="applyFilter()" 
+                                                :disabled="!dateDebut || !dateFin"
+                                                class="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                                            Appliquer
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="divide-y divide-gray-200">
+                        {% for transaction in transactions_recentes %}
+                            <div class="px-6 py-4 hover:bg-gray-50 transition-colors">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center flex-1">
+                                        <div class="flex-shrink-0">
+                                            <div class="h-10 w-10 {{ transaction.type == 'recette' ? 'bg-green-100' : 'bg-red-100' }} rounded-full flex items-center justify-center">
+                                                <span class="text-lg {{ transaction.type == 'recette' ? 'text-green-600' : 'text-red-600' }}">
+                                                    {{ transaction.type == 'recette' ? '+' : '-' }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="ml-4 flex-1">
+                                            <div class="flex items-center justify-between">
+                                                <div class="flex-1">
+                                                    <p class="text-base font-medium text-gray-900">{{ transaction.description }}</p>
+                                                    <p class="text-sm text-gray-500">{{ transaction.categorie|replace({'_': ' '})|title }} • {{ transaction.dateTransaction|date('d/m/Y à H:i') }}</p>
+                                                </div>
+                                                <div class="text-right ml-6">
+                                                    <div class="text-base font-semibold {{ transaction.type == 'recette' ? 'text-green-600' : 'text-red-600' }}">
+                                                        {{ transaction.type == 'recette' ? '+' : '-' }}{{ (transaction.montant * 655.957)|number_format(0, ',', ' ') }} F CFA
+                                                    </div>
+                                                    {% if transaction.betail %}
+                                                        <div class="text-xs text-gray-400">{{ transaction.betail.nom ?? 'Animal #' ~ transaction.betail.id }}</div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Résumé en bas -->
+                    <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
+                        <div class="grid grid-cols-3 gap-4 text-center">
+                            <div>
+                                <div class="text-sm text-gray-500">Total Recettes</div>
+                                <div class="text-base font-semibold text-green-600">+{{ (statistiques.finances.recettes_mois * 655.957)|number_format(0, ',', ' ') }} F CFA</div>
+                            </div>
+                            <div>
+                                <div class="text-sm text-gray-500">Total Dépenses</div>
+                                <div class="text-base font-semibold text-red-600">-{{ ((statistiques.finances.recettes_mois - statistiques.finances.benefice_mois) * 655.957)|number_format(0, ',', ' ') }} F CFA</div>
+                            </div>
+                            <div>
+                                <div class="text-sm text-gray-500">Bénéfice Net</div>
+                                <div class="text-base font-semibold {{ statistiques.finances.benefice_mois >= 0 ? 'text-green-600' : 'text-red-600' }}">
+                                    {{ statistiques.finances.benefice_mois >= 0 ? '+' : '' }}{{ (statistiques.finances.benefice_mois * 655.957)|number_format(0, ',', ' ') }} F CFA
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="text-lg font-medium text-gray-900">Transactions récentes</h3>
+                    </div>
+                    <div class="p-12 text-center">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <h3 class="mt-2 text-sm font-medium text-gray-900">Aucune transaction</h3>
+                        <p class="mt-1 text-sm text-gray-500">Commencez par enregistrer vos premières transactions.</p>
+                        <div class="mt-6">
+                            <button class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                                <svg class="-ml-1 mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                </svg>
+                                Nouvelle transaction
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

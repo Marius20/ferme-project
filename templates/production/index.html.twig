@@ -1,0 +1,110 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Suivi de Production - {{ parent() }}{% endblock %}
+
+{% block page_title %}Suivi de Production{% endblock %}
+{% block page_subtitle %}Monitoring temps réel de la production d'œufs{% endblock %}
+
+{% block header_actions %}
+    <div class="flex space-x-3">
+        <button class="btn btn-primary">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+            Saisir Production
+        </button>
+        <button class="btn btn-outline">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+            </svg>
+            Rapport Détaillé
+        </button>
+        <button class="btn btn-outline">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            Export Excel
+        </button>
+    </div>
+{% endblock %}
+
+{% block body %}
+    <div class="space-y-6">
+        <!-- Alerte d'information -->
+        <div class="alert alert-info">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-blue-800">
+                        Dashboard Interactif
+                    </h3>
+                    <div class="mt-2 text-sm text-blue-700">
+                        <p>Utilisez les filtres ci-dessous pour analyser la production par ferme et période. 
+                           Les données se mettent à jour automatiquement lors des changements de sélection.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Component de suivi production -->
+        {{ component('ProductionTracker') }}
+
+        <!-- Conseils d'optimisation -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">💡 Conseils d'Optimisation</h3>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <h4 class="font-medium text-gray-900">Améliorer le Taux de Ponte</h4>
+                        <ul class="space-y-2 text-sm text-gray-600">
+                            <li class="flex items-start">
+                                <span class="text-green-500 mr-2">✓</span>
+                                Maintenir 14-16h de lumière par jour
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-green-500 mr-2">✓</span>
+                                Température optimale: 18-24°C
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-green-500 mr-2">✓</span>
+                                Alimentation riche en calcium (3-4%)
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-green-500 mr-2">✓</span>
+                                Eau fraîche disponible en permanence
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <h4 class="font-medium text-gray-900">Surveillance Sanitaire</h4>
+                        <ul class="space-y-2 text-sm text-gray-600">
+                            <li class="flex items-start">
+                                <span class="text-yellow-500 mr-2">⚠</span>
+                                Taux ponte < 60% : vérifier santé
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-yellow-500 mr-2">⚠</span>
+                                Chute brutale : possible stress/maladie
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-yellow-500 mr-2">⚠</span>
+                                Contrôler parasites externes/internes
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-yellow-500 mr-2">⚠</span>
+                                Vaccination à jour selon calendrier
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

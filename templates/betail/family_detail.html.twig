@@ -1,0 +1,280 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ typeName }} - Gestion du Bétail - {{ parent() }}{% endblock %}
+
+{% block page_title %}{{ typeName }}{% endblock %}
+{% block page_subtitle %}{{ description }}{% endblock %}
+
+{% block header_actions %}
+    <div class="flex space-x-3">
+        <button class="btn btn-primary" onclick="addNewAnimal('{{ type }}')">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+            Ajouter {{ typeName }}
+        </button>
+        <button class="btn btn-outline">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            Exporter
+        </button>
+    </div>
+{% endblock %}
+
+{% block body %}
+    <!-- Navigation -->
+    <div class="mb-6">
+        <nav class="flex" aria-label="Breadcrumb">
+            <ol class="flex items-center space-x-4">
+                <li>
+                    <div>
+                        <a href="{{ path('betail_index', {fermeId: fermeActive.id}) }}" class="text-gray-400 hover:text-gray-500">
+                            <svg class="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
+                            </svg>
+                            <span class="sr-only">Accueil</span>
+                        </a>
+                    </div>
+                </li>
+                <li>
+                    <div class="flex items-center">
+                        <svg class="w-5 h-5 flex-shrink-0 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                        </svg>
+                        <span class="ml-4 text-lg font-medium text-gray-900">{{ typeName }}</span>
+                    </div>
+                </li>
+            </ol>
+        </nav>
+    </div>
+
+    <!-- Statistiques de la famille -->
+    <div class="mb-6">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">Statistiques de la Famille {{ typeName }}</h2>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        {% set totalFamille = 0 %}
+        {% for sousType in statistiquesSousTypes %}
+            {% set totalFamille = totalFamille + sousType.effectif %}
+        {% endfor %}
+        
+        <div class="stat-card">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-12 h-12 rounded-full flex items-center justify-center text-2xl 
+                        {% if type == 'bovin' %}bg-purple-100 text-purple-600
+                        {% elseif type == 'ovin' %}bg-yellow-100 text-yellow-600  
+                        {% elseif type == 'caprin' %}bg-green-100 text-green-600
+                        {% elseif type == 'porcin' %}bg-pink-100 text-pink-600
+                        {% elseif type == 'equin' %}bg-blue-100 text-blue-600
+                        {% else %}bg-gray-100 text-gray-600{% endif %}">
+                        {% if type == 'bovin' %}🐄
+                        {% elseif type == 'ovin' %}🐑
+                        {% elseif type == 'caprin' %}🐐
+                        {% elseif type == 'porcin' %}🐷
+                        {% elseif type == 'equin' %}🐎
+                        {% else %}🐾{% endif %}
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Total {{ typeName }}</p>
+                    <p class="text-3xl font-bold 
+                        {% if type == 'bovin' %}text-purple-600
+                        {% elseif type == 'ovin' %}text-yellow-600  
+                        {% elseif type == 'caprin' %}text-green-600
+                        {% elseif type == 'porcin' %}text-pink-600
+                        {% elseif type == 'equin' %}text-blue-600
+                        {% else %}text-gray-600{% endif %}">{{ totalFamille }}</p>
+                    <p class="text-xs text-gray-500">têtes actives</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-7 h-7 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Types</p>
+                    <p class="text-3xl font-bold text-green-600">{{ statistiquesSousTypes|length }}</p>
+                    <p class="text-xs text-gray-500">sous-catégories</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Moyenne par type</p>
+                    <p class="text-3xl font-bold text-blue-600">{{ statistiquesSousTypes|length > 0 ? (totalFamille / statistiquesSousTypes|length)|round : 0 }}</p>
+                    <p class="text-xs text-gray-500">animaux/type</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Liste des types de bétail -->
+    <div class="mb-6">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">Types de {{ typeName }}</h2>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for sousTypeKey, sousType in statistiquesSousTypes %}
+            <div class="card hover:shadow-lg transition-shadow cursor-pointer" onclick="navigateToType('{{ type }}', '{{ sousTypeKey }}')">
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 rounded-full flex items-center justify-center text-xl
+                                {% if type == 'bovin' %}bg-purple-100 text-purple-600
+                                {% elseif type == 'ovin' %}bg-yellow-100 text-yellow-600  
+                                {% elseif type == 'caprin' %}bg-green-100 text-green-600
+                                {% elseif type == 'porcin' %}bg-pink-100 text-pink-600
+                                {% elseif type == 'equin' %}bg-blue-100 text-blue-600
+                                {% else %}bg-gray-100 text-gray-600{% endif %}">
+                                {% if type == 'bovin' %}🐄
+                                {% elseif type == 'ovin' %}🐑
+                                {% elseif type == 'caprin' %}🐐
+                                {% elseif type == 'porcin' %}🐷
+                                {% elseif type == 'equin' %}🐎
+                                {% else %}🐾{% endif %}
+                            </div>
+                            <div class="ml-3">
+                                <h3 class="text-lg font-semibold text-gray-900">{{ sousType.nom }}</h3>
+                                <p class="text-sm text-gray-500">{{ type|title }}</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-2xl font-bold 
+                                {% if type == 'bovin' %}text-purple-600
+                                {% elseif type == 'ovin' %}text-yellow-600  
+                                {% elseif type == 'caprin' %}text-green-600
+                                {% elseif type == 'porcin' %}text-pink-600
+                                {% elseif type == 'equin' %}text-blue-600
+                                {% else %}text-gray-600{% endif %}">
+                                {{ sousType.effectif }}
+                            </div>
+                            <p class="text-xs text-gray-500">animaux</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="h-2 rounded-full 
+                                {% if type == 'bovin' %}bg-purple-600
+                                {% elseif type == 'ovin' %}bg-yellow-600  
+                                {% elseif type == 'caprin' %}bg-green-600
+                                {% elseif type == 'porcin' %}bg-pink-600
+                                {% elseif type == 'equin' %}bg-blue-600
+                                {% else %}bg-gray-600{% endif %}"
+                                style="width: {{ totalFamille > 0 ? (sousType.effectif / totalFamille * 100)|round(1) : 0 }}%">
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">
+                            {{ totalFamille > 0 ? ((sousType.effectif / totalFamille * 100)|round(1)) : 0 }}% du total {{ typeName }}
+                        </p>
+                    </div>
+                    
+                    <div class="flex items-center justify-between pt-4 border-t">
+                        <button class="btn btn-sm btn-outline" onclick="event.stopPropagation(); addNewAnimal('{{ type }}', '{{ sousTypeKey }}')">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                            Ajouter
+                        </button>
+                        <div class="flex items-center text-sm text-gray-500">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                            Gérer
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="col-span-full text-center py-12">
+                <div class="text-center">
+                    <div class="w-16 h-16 rounded-full flex items-center justify-center text-4xl mx-auto mb-4
+                        {% if type == 'bovin' %}bg-purple-100 text-purple-600
+                        {% elseif type == 'ovin' %}bg-yellow-100 text-yellow-600  
+                        {% elseif type == 'caprin' %}bg-green-100 text-green-600
+                        {% elseif type == 'porcin' %}bg-pink-100 text-pink-600
+                        {% elseif type == 'equin' %}bg-blue-100 text-blue-600
+                        {% else %}bg-gray-100 text-gray-600{% endif %}">
+                        {% if type == 'bovin' %}🐄
+                        {% elseif type == 'ovin' %}🐑
+                        {% elseif type == 'caprin' %}🐐
+                        {% elseif type == 'porcin' %}🐷
+                        {% elseif type == 'equin' %}🐎
+                        {% else %}🐾{% endif %}
+                    </div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">Aucun {{ typeName|lower }} enregistré</h3>
+                    <p class="text-gray-500">Commencez par ajouter votre premier animal de type {{ typeName|lower }}.</p>
+                    <button class="btn btn-primary mt-4" onclick="addNewAnimal('{{ type }}')">Ajouter un {{ typeName|lower }}</button>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Actions rapides -->
+    {% if statistiquesSousTypes %}
+    <div class="mt-8 card">
+        <div class="p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Actions Rapides</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <button class="btn btn-outline" onclick="addNewAnimal('{{ type }}')">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                    Ajouter un {{ typeName|lower }}
+                </button>
+                <button class="btn btn-outline" onclick="exportFamily('{{ type }}')">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    Exporter les données
+                </button>
+                <button class="btn btn-outline" onclick="showStatistics('{{ type }}')">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+                    Voir statistiques détaillées
+                </button>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <script>
+        function navigateToType(type, sousType) {
+            window.location.href = "{{ path('betail_type', {fermeId: fermeActive.id, type: 'TYPE_PLACEHOLDER', sousType: 'SOUSTYPE_PLACEHOLDER'}) }}"
+                .replace('TYPE_PLACEHOLDER', type)
+                .replace('SOUSTYPE_PLACEHOLDER', sousType);
+        }
+        
+        function addNewAnimal(type, sousType = null) {
+            // Modal d'ajout d'animal avec type et sous-type pré-sélectionnés
+            alert('Modal d\'ajout à implémenter pour type: ' + type + (sousType ? ', sous-type: ' + sousType : ''));
+        }
+        
+        function exportFamily(type) {
+            alert('Export des données pour la famille: ' + type);
+        }
+        
+        function showStatistics(type) {
+            alert('Statistiques détaillées pour la famille: ' + type);
+        }
+    </script>
+{% endblock %}

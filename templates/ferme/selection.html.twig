@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-full bg-gray-50">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Sélection de Ferme - Gestion d'Élevage</title>
+        
+        <!-- Favicon -->
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>🚜</text></svg>">
+        
+        {{ encore_entry_link_tags('app') }}
+        {{ encore_entry_script_tags('app') }}
+    </head>
+    <body class="h-full bg-gray-50 flex items-center justify-center">
+        <div class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <!-- En-tête de bienvenue -->
+            <div class="text-center mb-12">
+                <div class="text-8xl mb-6">🚜</div>
+                <h1 class="text-5xl font-bold text-gray-900 mb-4">FarmManager</h1>
+                <p class="text-xl text-gray-600">Sélectionnez votre ferme pour commencer</p>
+            </div>
+
+            {% if fermes|length > 0 %}
+                <!-- Grille des fermes -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                    {% for ferme in fermes %}
+                        <a href="{{ path('ferme_select', {id: ferme.id}) }}" 
+                           class="group block transform hover:scale-105 transition-all duration-300">
+                            <div class="bg-white rounded-xl shadow-lg hover:shadow-2xl border border-gray-200 hover:border-blue-300 transition-all duration-300">
+                                <!-- En-tête de la carte -->
+                                <div class="p-6 bg-gradient-to-br from-blue-50 via-green-50 to-yellow-50 rounded-t-xl">
+                                    <div class="flex items-center justify-between">
+                                        <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-md text-3xl">
+                                            {% if ferme.type == 'elevage_bovin' %}🐄
+                                            {% elseif ferme.type == 'elevage_ovin' %}🐑
+                                            {% elseif ferme.type == 'elevage_caprin' %}🐐
+                                            {% elseif ferme.type == 'elevage_porcin' %}🐷
+                                            {% elseif ferme.type == 'elevage_mixte' %}🏢
+                                            {% elseif ferme.type == 'culture' %}🌾
+                                            {% else %}🚜
+                                            {% endif %}
+                                        </div>
+                                        <div class="text-right">
+                                            <span class="inline-block bg-blue-100 text-blue-800 text-xs px-3 py-1 rounded-full font-medium">
+                                                {{ ferme.type ? (ferme.type|replace({'_': ' '})|title) : 'Ferme' }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Corps de la carte -->
+                                <div class="p-6">
+                                    <h3 class="text-2xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors">
+                                        {{ ferme.nom }}
+                                    </h3>
+                                    
+                                    <div class="space-y-3 text-sm text-gray-600 mb-4">
+                                        <div class="flex items-center">
+                                            <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            </svg>
+                                            {{ ferme.localisation }}
+                                        </div>
+                                        <div class="flex items-center">
+                                            <svg class="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4a1 1 0 011-1h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V12a1 1 0 01-1 1H9a1 1 0 01-1-1V8z"></path>
+                                            </svg>
+                                            {{ ferme.superficie }} hectares
+                                        </div>
+                                        <div class="flex items-center">
+                                            <svg class="w-4 h-4 mr-2 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3a1 1 0 011-1h6a1 1 0 011 1v4h3a1 1 0 011 1v9a2 2 0 01-2 2H5a2 2 0 01-2-2V8a1 1 0 011-1h3z"></path>
+                                            </svg>
+                                            Depuis {{ ferme.dateCreation|date('Y') }}
+                                        </div>
+                                    </div>
+
+                                    {% if ferme.description %}
+                                        <p class="text-gray-600 text-sm mb-4 line-clamp-2">
+                                            {{ ferme.description }}
+                                        </p>
+                                    {% endif %}
+
+                                    <!-- Statistiques rapides -->
+                                    <div class="pt-4 border-t border-gray-100">
+                                        <div class="grid grid-cols-3 gap-4 text-center">
+                                            <div class="bg-gray-50 rounded-lg p-2">
+                                                <div class="text-xl font-bold text-gray-900">{{ ferme.betails|length }}</div>
+                                                <div class="text-xs text-gray-500">Bétail</div>
+                                            </div>
+                                            <div class="bg-gray-50 rounded-lg p-2">
+                                                <div class="text-xl font-bold text-gray-900">{{ ferme.batiments|length }}</div>
+                                                <div class="text-xs text-gray-500">Bâtiments</div>
+                                            </div>
+                                            <div class="bg-gray-50 rounded-lg p-2">
+                                                <div class="text-xl font-bold text-gray-900">{{ ferme.employes|length }}</div>
+                                                <div class="text-xs text-gray-500">Employés</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Flèche d'accès -->
+                                    <div class="mt-4 flex justify-end">
+                                        <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    {% endfor %}
+                </div>
+
+                <!-- Actions supplémentaires -->
+                <div class="mt-16 text-center">
+                    <div class="inline-flex flex-col sm:flex-row items-center gap-4">
+                        <button class="btn btn-outline bg-white hover:bg-gray-50 border-gray-300">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                            Ajouter une ferme
+                        </button>
+                        <span class="text-gray-400 hidden sm:inline">•</span>
+                        <a href="#" class="text-blue-600 hover:text-blue-800 font-medium transition-colors">
+                            Besoin d'aide ?
+                        </a>
+                    </div>
+                </div>
+
+            {% else %}
+                <!-- Aucune ferme disponible -->
+                <div class="text-center py-16 max-w-md mx-auto">
+                    <div class="w-32 h-32 mx-auto mb-8 bg-gradient-to-br from-blue-100 to-green-100 rounded-full flex items-center justify-center">
+                        <svg class="w-16 h-16 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h2M9 7h6m-6 4h6m-6 4h6"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-3xl font-bold text-gray-900 mb-4">Commencez votre aventure</h3>
+                    <p class="text-lg text-gray-600 mb-8">Créez votre première ferme et démarrez la gestion de votre exploitation.</p>
+                    <button class="btn btn-primary btn-lg bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 border-none">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        Créer ma première ferme
+                    </button>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Styles CSS additionnels -->
+        <style>
+            .line-clamp-2 {
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+            }
+        </style>
+    </body>
+</html>

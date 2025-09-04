@@ -1,0 +1,235 @@
+<div {{ attributes }}>
+    <!-- Sélecteur de ferme -->
+    <div class="mb-6">
+        <label for="ferme-select" class="form-label">Ferme sélectionnée</label>
+        <select 
+            wire:model="selectedFermeId" 
+            id="ferme-select" 
+            class="form-select w-64"
+        >
+            {% for ferme in this.fermes %}
+                <option value="{{ ferme.id }}">{{ ferme.nom }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <!-- Statistiques principales -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Effectifs totaux -->
+        <div class="stat-card">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <span class="text-xl">🐄</span>
+                    </div>
+                </div>
+                <div class="ml-5 w-0 flex-1">
+                    <dl>
+                        <dt class="text-sm font-medium text-gray-500 truncate">Effectifs Animaux</dt>
+                        <dd class="flex items-baseline">
+                            <div class="text-2xl font-semibold text-gray-900">
+                                {% set totalAnimaux = 0 %}
+                                {% for typeData in this.statistiques.effectifs.animaux %}
+                                    {% set totalAnimaux = totalAnimaux + typeData.nombre %}
+                                {% endfor %}
+                                {{ totalAnimaux }}
+                            </div>
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <!-- Effectifs volailles -->
+        <div class="stat-card">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
+                        <span class="text-xl">🐓</span>
+                    </div>
+                </div>
+                <div class="ml-5 w-0 flex-1">
+                    <dl>
+                        <dt class="text-sm font-medium text-gray-500 truncate">Effectifs Volailles</dt>
+                        <dd class="flex items-baseline">
+                            <div class="text-2xl font-semibold text-gray-900">
+                                {% set totalVolailles = 0 %}
+                                {% for typeData in this.statistiques.effectifs.volailles %}
+                                    {% set totalVolailles = totalVolailles + typeData.nombre %}
+                                {% endfor %}
+                                {{ totalVolailles }}
+                            </div>
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <!-- Production d'œufs -->
+        <div class="stat-card">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                        <span class="text-xl">🥚</span>
+                    </div>
+                </div>
+                <div class="ml-5 w-0 flex-1">
+                    <dl>
+                        <dt class="text-sm font-medium text-gray-500 truncate">Œufs aujourd'hui</dt>
+                        <dd class="flex items-baseline">
+                            <div class="text-2xl font-semibold text-gray-900">
+                                {{ this.statistiques.production_oeufs_jour }}
+                            </div>
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bénéfices du mois -->
+        <div class="stat-card">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                        <span class="text-xl">💰</span>
+                    </div>
+                </div>
+                <div class="ml-5 w-0 flex-1">
+                    <dl>
+                        <dt class="text-sm font-medium text-gray-500 truncate">Bénéfice du mois</dt>
+                        <dd class="flex items-baseline">
+                            <div class="text-2xl font-semibold {{ this.statistiques.benefice_mois >= 0 ? 'text-green-600' : 'text-red-600' }}">
+                                {{ (this.statistiques.benefice_mois)|number_format(0, ',', ' ') }} €
+                            </div>
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alertes -->
+    {% if this.alertes|length > 0 %}
+        <div class="mb-8">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">⚠️ Alertes</h3>
+            <div class="space-y-3">
+                {% for alerte in this.alertes %}
+                    <div class="alert alert-{{ alerte.type == 'stock_critique' ? 'danger' : 'warning' }}">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                {% if alerte.type == 'stock_critique' %}
+                                    <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                    </svg>
+                                {% else %}
+                                    <svg class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                    </svg>
+                                {% endif %}
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm">{{ alerte.message }}</p>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Détail des effectifs -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <!-- Effectifs animaux détaillés -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">🐄 Effectifs Animaux</h3>
+            </div>
+            <div class="space-y-4">
+                {% for typeData in this.statistiques.effectifs.animaux %}
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div class="flex items-center">
+                            <span class="text-sm font-medium text-gray-600">
+                                {{ typeData.sousType|title }} ({{ typeData.type|title }})
+                            </span>
+                        </div>
+                        <span class="text-lg font-semibold text-gray-900">{{ typeData.nombre }}</span>
+                    </div>
+                {% endfor %}
+                
+                {% if this.statistiques.effectifs.animaux|length == 0 %}
+                    <p class="text-gray-500 text-center py-4">Aucun animal enregistré</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Effectifs volailles détaillés -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">🐓 Effectifs Volailles</h3>
+            </div>
+            <div class="space-y-4">
+                {% for typeData in this.statistiques.effectifs.volailles %}
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div class="flex items-center">
+                            <span class="text-sm font-medium text-gray-600">
+                                {{ typeData.type|replace('_', ' ')|title }}
+                            </span>
+                        </div>
+                        <span class="text-lg font-semibold text-gray-900">{{ typeData.nombre }}</span>
+                    </div>
+                {% endfor %}
+                
+                {% if this.statistiques.effectifs.volailles|length == 0 %}
+                    <p class="text-gray-500 text-center py-4">Aucune volaille enregistrée</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Finances du mois -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Recettes -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">💰 Recettes du mois</h3>
+                <span class="text-2xl font-bold text-green-600">
+                    {{ this.statistiques.recettes_mois|number_format(0, ',', ' ') }} €
+                </span>
+            </div>
+            <div class="space-y-2">
+                {% for recette in this.rentabiliteActivite.recettes %}
+                    <div class="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0">
+                        <span class="text-sm text-gray-600">
+                            {{ recette.categorie|replace('_', ' ')|title }}
+                        </span>
+                        <span class="font-medium text-green-600">
+                            +{{ recette.montant|number_format(0, ',', ' ') }} €
+                        </span>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Dépenses -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">💸 Dépenses du mois</h3>
+                <span class="text-2xl font-bold text-red-600">
+                    {{ this.statistiques.depenses_mois|number_format(0, ',', ' ') }} €
+                </span>
+            </div>
+            <div class="space-y-2">
+                {% for depense in this.rentabiliteActivite.depenses %}
+                    <div class="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0">
+                        <span class="text-sm text-gray-600">
+                            {{ depense.categorie|replace('_', ' ')|title }}
+                        </span>
+                        <span class="font-medium text-red-600">
+                            -{{ depense.montant|number_format(0, ',', ' ') }} €
+                        </span>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>

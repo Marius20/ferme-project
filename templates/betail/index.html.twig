@@ -1,0 +1,437 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Gestion des Animaux - {{ parent() }}{% endblock %}
+
+{% block page_title %}Gestion du Bétail{% endblock %}
+{% block page_subtitle %}Vue hiérarchique : Fermes → Bâtiments → Zones → Bétail{% endblock %}
+
+{% block header_actions %}
+    <div class="flex space-x-3">
+        <button class="btn btn-primary">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+            Nouveau Bétail
+        </button>
+        <button class="btn btn-outline">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            Exporter
+        </button>
+    </div>
+{% endblock %}
+
+{% block body %}
+    <!-- Navigation hiérarchique et filtres -->
+    <div class="card mb-6">
+        <div class="p-6">
+            <!-- Navigation hiérarchique -->
+            <div class="mb-6" x-data="{ 
+                selectedZoneFerme: '',
+                selectedBatiment: '',
+                selectedZoneBatiment: '',
+                batiments: [],
+                zonesBatiment: [],
+                init() {
+                    this.loadBatiments();
+                },
+                loadBatiments: function() {
+                    // Simulation - à remplacer par un appel AJAX
+                    this.batiments = [
+                        {id: 1, nom: 'Stabulation Principale', zoneFerme: 'Zone Nord'},
+                        {id: 2, nom: 'Bâtiment Élevage', zoneFerme: 'Zone Sud'},
+                        {id: 3, nom: 'Hangar de Stockage', zoneFerme: 'Zone Ouest'},
+                        {id: 4, nom: 'Infirmerie', zoneFerme: 'Zone Centre'}
+                    ];
+                },
+                loadZonesBatiment: function() {
+                    if (this.selectedBatiment) {
+                        // Simulation - à remplacer par un appel AJAX basé sur le bâtiment sélectionné
+                        const zonesByBatiment = {
+                            1: [ // Stabulation Principale
+                                {id: 'stab_1', nom: 'Box 1-10'},
+                                {id: 'stab_2', nom: 'Box 11-20'},
+                                {id: 'stab_3', nom: 'Zone Alimentation'},
+                                {id: 'stab_4', nom: 'Zone Repos'}
+                            ],
+                            2: [ // Bâtiment Élevage
+                                {id: 'elev_1', nom: 'Nurserie'},
+                                {id: 'elev_2', nom: 'Jeunes Animaux'},
+                                {id: 'elev_3', nom: 'Adultes Reproductrices'},
+                                {id: 'elev_4', nom: 'Quarantaine'}
+                            ],
+                            3: [ // Hangar de Stockage
+                                {id: 'stock_1', nom: 'Zone Foin'},
+                                {id: 'stock_2', nom: 'Zone Aliments'},
+                                {id: 'stock_3', nom: 'Zone Matériel'}
+                            ],
+                            4: [ // Infirmerie
+                                {id: 'inf_1', nom: 'Box Isolation'},
+                                {id: 'inf_2', nom: 'Salle de Soins'},
+                                {id: 'inf_3', nom: 'Convalescence'}
+                            ]
+                        };
+                        this.zonesBatiment = zonesByBatiment[this.selectedBatiment] || [];
+                        this.selectedZoneBatiment = '';
+                    }
+                }
+            }">
+                <h4 class="text-base font-semibold text-gray-900 mb-4">Navigation Hiérarchique dans {{ ferme_active ? ferme_active.nom : 'la Ferme' }}</h4>
+                <p class="text-sm text-gray-600 mb-4">Structure: <span class=\"font-medium\">Zone de Ferme</span> → <span class=\"font-medium\">Bâtiment</span> → <span class=\"font-medium\">Zone de Bâtiment</span> → <span class=\"font-medium\">Bétail</span></p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div>
+                        <label class="form-label">Zone de Ferme / Bâtiment</label>
+                        <select x-model="selectedBatiment" @change="loadZonesBatiment()" class="form-select">
+                            <option value="">Tous les bâtiments</option>
+                            <template x-for="batiment in batiments" :key="batiment.id">
+                                <option :value="batiment.id">
+                                    <span x-text="batiment.nom + ' (' + batiment.zoneFerme + ')'"></span>
+                                </option>
+                            </template>
+                        </select>
+                        <div class="text-xs text-gray-500 mt-1">Bâtiments regroupés par zone de ferme</div>
+                    </div>
+                    
+                    <div>
+                        <label class="form-label">Zone dans le Bâtiment</label>
+                        <select x-model="selectedZoneBatiment" class="form-select" :disabled="!selectedBatiment">
+                            <option value="">Toutes les zones du bâtiment</option>
+                            <template x-for="zone in zonesBatiment" :key="zone.id">
+                                <option :value="zone.id" x-text="zone.nom"></option>
+                            </template>
+                        </select>
+                        <div class="text-xs text-gray-500 mt-1">Subdivisions internes du bâtiment</div>
+                    </div>
+                    
+                    <div>
+                        <label class="form-label">Actions Rapides</label>
+                        <div class="flex space-x-2">
+                            <button class="flex-1 px-3 py-2 text-sm bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100 transition-colors" 
+                                    @click="selectedBatiment = ''; selectedZoneBatiment = ''; zonesBatiment = []">
+                                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                </svg>
+                                Réinitialiser
+                            </button>
+                            <button class="flex-1 px-3 py-2 text-sm bg-green-50 text-green-700 rounded-md hover:bg-green-100 transition-colors"
+                                    onclick="openAddModal()">
+                                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                </svg>
+                                Ajouter
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Indicateurs de filtrage -->
+                <div class="flex items-center space-x-4 text-sm">
+                    <div class="flex items-center space-x-2" x-show="selectedBatiment">
+                        <div class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+                            <span>Bâtiment: </span>
+                            <span x-text="batiments.find(b => b.id == selectedBatiment)?.nom"></span>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2" x-show="selectedZoneBatiment">
+                        <div class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+                            <span>Zone: </span>
+                            <span x-text="zonesBatiment.find(z => z.id == selectedZoneBatiment)?.nom"></span>
+                        </div>
+                    </div>
+                    <div class="text-gray-500" x-show="!selectedBatiment && !selectedZoneBatiment">
+                        Affichage de tous les animaux de la ferme
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Filtres avancés -->
+            <div class="border-t border-gray-200 pt-6">
+                <h4 class="text-base font-semibold text-gray-900 mb-4">Filtres Avancés</h4>
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                    <div>
+                        <label for="type-filter" class="form-label">Type d'animal</label>
+                        <select id="type-filter" class="form-select">
+                            <option value="">Tous les types</option>
+                            <option value="bovin">Bovins</option>
+                            <option value="ovin">Ovins</option>
+                            <option value="caprin">Caprins</option>
+                            <option value="porcin">Porcins</option>
+                            <option value="equin">Équins</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="statut-filter" class="form-label">Statut</label>
+                        <select id="statut-filter" class="form-select">
+                            <option value="">Tous les statuts</option>
+                            <option value="actif">Actif</option>
+                            <option value="vendu">Vendu</option>
+                            <option value="mort">Mort</option>
+                            <option value="reforme">Réforme</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="age-filter" class="form-label">Âge</label>
+                        <select id="age-filter" class="form-select">
+                            <option value="">Tous les âges</option>
+                            <option value="0-6">0-6 mois</option>
+                            <option value="6-12">6-12 mois</option>
+                            <option value="12-24">1-2 ans</option>
+                            <option value="24+">2+ ans</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="race-filter" class="form-label">Race</label>
+                        <select id="race-filter" class="form-select">
+                            <option value="">Toutes les races</option>
+                            <option value="holstein">Holstein</option>
+                            <option value="charolais">Charolais</option>
+                            <option value="limousin">Limousin</option>
+                            <option value="autre">Autre</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="search" class="form-label">Recherche</label>
+                        <input type="text" id="search" class="form-input" placeholder="Nom, numéro, puce...">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques rapides -->
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+        {% set totalAnimaux = betails|length %}
+        {% set animauxActifs = betails|filter(b => b.dateSortie is null)|length %}
+        {% set totalBovins = betails|filter(b => b.type == 'bovin')|length %}
+        {% set totalOvins = betails|filter(b => b.type == 'ovin')|length %}
+        {% set totalCaprins = betails|filter(b => b.type == 'caprin')|length %}
+
+        <div class="stat-card">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Total Bétail</p>
+                    <p class="text-2xl font-semibold text-gray-900">{{ totalAnimaux }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Actifs</p>
+                    <p class="text-2xl font-semibold text-green-600">{{ animauxActifs }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Bovins</p>
+                    <p class="text-2xl font-semibold text-purple-600">{{ totalBovins }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Ovins</p>
+                    <p class="text-2xl font-semibold text-yellow-600">{{ totalOvins }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3l14 9-14 9V3z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Caprins</p>
+                    <p class="text-2xl font-semibold text-orange-600">{{ totalCaprins }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liste des animaux -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Liste du Bétail</h3>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bétail</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Localisation</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Âge</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Poids</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for animal in betails %}
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 h-10 w-10">
+                                        <div class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                                            {% if animal.type == 'bovin' %}🐄
+                                            {% elseif animal.type == 'ovin' %}🐑
+                                            {% elseif animal.type == 'caprin' %}🐐
+                                            {% elseif animal.type == 'porcin' %}🐷
+                                            {% elseif animal.type == 'equin' %}🐎
+                                            {% else %}🐾
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="ml-4">
+                                        <div class="text-sm font-medium text-gray-900">
+                                            {{ animal.nom ?? 'Sans nom' }}
+                                        </div>
+                                        <div class="text-sm text-gray-500">
+                                            N° {{ animal.numero }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">{{ animal.sousType|replace('_', ' ')|title }}</div>
+                                <div class="text-sm text-gray-500">{{ animal.race }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                <div class="text-sm text-gray-900">{{ animal.ferme.nom }}</div>
+                                <div class="text-xs text-gray-500">
+                                    {% if animal.zone %}
+                                        {{ animal.zone.batiment.nom }} • Zone {{ animal.zone.nom }}
+                                    {% elseif animal.batiment %}
+                                        {{ animal.batiment.nom }}
+                                    {% else %}
+                                        Non assigné
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {% set age = date().diff(animal.dateNaissance) %}
+                                {{ age.y }} ans {{ age.m }} mois
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {{ animal.poids ? (animal.poids|number_format(1, ',', ' ') ~ ' kg') : '-' }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full 
+                                    {% if animal.statut == 'actif' %}bg-green-100 text-green-800
+                                    {% elseif animal.statut == 'vendu' %}bg-blue-100 text-blue-800
+                                    {% elseif animal.statut == 'mort' %}bg-red-100 text-red-800
+                                    {% elseif animal.statut == 'reforme' %}bg-yellow-100 text-yellow-800
+                                    {% else %}bg-gray-100 text-gray-800
+                                    {% endif %}">
+                                    {{ animal.statut|title }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <!-- Actions avec dropdown -->\n                                <div class=\"flex items-center justify-end\" x-data=\"{ open: false }\">\n                                    <button @click=\"open = !open\" @click.away=\"open = false\" class=\"text-gray-400 hover:text-gray-600 focus:outline-none focus:text-gray-600\">\n                                        <svg class=\"w-5 h-5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\n                                            <path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z\"></path>\n                                        </svg>\n                                    </button>\n                                    \n                                    <!-- Dropdown menu -->\n                                    <div x-show=\"open\" x-transition class=\"absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg z-50 border border-gray-200\">\n                                        <div class=\"py-1\">\n                                            <a href=\"{{ path('betail_show', {id: animal.id}) }}\" class=\"flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100\">\n                                                <svg class=\"w-4 h-4 mr-3 text-gray-400\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\n                                                    <path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M15 12a3 3 0 11-6 0 3 3 0 016 0z\"></path>\n                                                    <path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z\"></path>\n                                                </svg>\n                                                Voir d\u00e9tails\n                                            </a>\n                                            <a href=\"{{ path('betail_edit', {id: animal.id}) }}\" class=\"flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100\">\n                                                <svg class=\"w-4 h-4 mr-3 text-gray-400\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\n                                                    <path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z\"></path>\n                                                </svg>\n                                                Modifier\n                                            </a>\n                                            <button class=\"w-full text-left flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100\" onclick=\"moveAnimal({{ animal.id }})\">\n                                                <svg class=\"w-4 h-4 mr-3 text-gray-400\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\n                                                    <path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4\"></path>\n                                                </svg>\n                                                D\u00e9placer\n                                            </button>\n                                            <button class=\"w-full text-left flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100\" onclick=\"medicalRecord({{ animal.id }})\">\n                                                <svg class=\"w-4 h-4 mr-3 text-gray-400\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\n                                                    <path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z\"></path>\n                                                </svg>\n                                                Fiche m\u00e9dicale\n                                            </button>\n                                            <div class=\"border-t border-gray-200 my-1\"></div>\n                                            <button class=\"w-full text-left flex items-center px-4 py-2 text-sm text-red-700 hover:bg-red-50\" onclick=\"deleteAnimal({{ animal.id }})\">\n                                                <svg class=\"w-4 h-4 mr-3 text-red-400\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\n                                                    <path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16\"></path>\n                                                </svg>\n                                                Supprimer\n                                            </button>\n                                        </div>\n                                    </div>\n                                </div>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="7" class="px-6 py-12 text-center text-gray-500">
+                                <div class="text-center">
+                                    <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
+                                    </svg>
+                                    <h3 class="text-lg font-medium text-gray-900 mb-2">Aucun bétail enregistré</h3>
+                                    <p class="text-gray-500">Commencez par ajouter votre premier animal à la ferme.</p>
+                                    <button class="btn btn-primary mt-4" onclick="openAddModal()">Ajouter un animal</button>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Scripts pour les actions CRUD -->
+    <script>
+        function openAddModal() {
+            // Modal d'ajout d'animal
+            alert('Modal d\'ajout à implémenter');
+        }
+        
+        function moveAnimal(animalId) {
+            // Modal de déplacement d'animal
+            alert('Modal de déplacement à implémenter pour animal ID: ' + animalId);
+        }
+        
+        function medicalRecord(animalId) {
+            // Ouvrir la fiche médicale
+            alert('Fiche médicale à implémenter pour animal ID: ' + animalId);
+        }
+        
+        function deleteAnimal(animalId) {
+            if (confirm('Êtes-vous sûr de vouloir supprimer cet animal ?')) {
+                // Suppression via AJAX
+                alert('Suppression à implémenter pour animal ID: ' + animalId);
+            }
+        }
+        
+        // Filtrage en temps réel
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('search');
+            const tableRows = document.querySelectorAll('tbody tr');
+            
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    const searchTerm = this.value.toLowerCase();
+                    
+                    tableRows.forEach(row => {
+                        if (row.cells.length > 1) { // Éviter la ligne "aucun résultat"
+                            const text = row.textContent.toLowerCase();
+                            row.style.display = text.includes(searchTerm) ? '' : 'none';
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+{% endblock %}

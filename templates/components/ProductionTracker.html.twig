@@ -1,0 +1,214 @@
+<div {{ attributes }}>
+    <!-- Contrôles -->
+    <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center space-x-4">
+            <!-- Sélecteur de ferme -->
+            <div>
+                <label for="ferme-select" class="form-label">Ferme</label>
+                <select 
+                    wire:model="selectedFermeId" 
+                    id="ferme-select" 
+                    class="form-select"
+                >
+                    {% for ferme in this.fermes %}
+                        <option value="{{ ferme.id }}">{{ ferme.nom }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Sélecteur de période -->
+            <div>
+                <label for="periode-select" class="form-label">Période</label>
+                <select 
+                    wire:model="periode" 
+                    id="periode-select" 
+                    class="form-select"
+                >
+                    <option value="semaine">7 derniers jours</option>
+                    <option value="mois">30 derniers jours</option>
+                    <option value="trimestre">3 derniers mois</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Bouton actualisation -->
+        <button 
+            wire:click="$refresh" 
+            class="btn btn-outline"
+            wire:loading.attr="disabled"
+        >
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+            <span wire:loading.remove>Actualiser</span>
+            <span wire:loading>Chargement...</span>
+        </button>
+    </div>
+
+    {% set stats = this.statistiquesProduction %}
+    {% set objectifs = this.productionObjectif %}
+
+    <!-- Indicateurs de performance -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="stat-card">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                        <span class="text-xl">🥚</span>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Total Œufs</p>
+                    <p class="text-2xl font-semibold text-orange-600">{{ stats.total|number_format(0, ',', ' ') }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <span class="text-xl">📊</span>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Moyenne/Jour</p>
+                    <p class="text-2xl font-semibold text-blue-600">{{ stats.moyenne }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-10 h-10 {{ stats.tendance >= 0 ? 'bg-green-100' : 'bg-red-100' }} rounded-lg flex items-center justify-center">
+                        <span class="text-xl">{{ stats.tendance >= 0 ? '📈' : '📉' }}</span>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Tendance</p>
+                    <p class="text-2xl font-semibold {{ stats.tendance >= 0 ? 'text-green-600' : 'text-red-600' }}">
+                        {{ stats.tendance >= 0 ? '+' : '' }}{{ stats.tendance }}%
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                        <span class="text-xl">🎯</span>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Objectif Jour</p>
+                    <p class="text-2xl font-semibold text-purple-600">{{ objectifs.objectif_jour }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Graphique de production -->
+    {% set productionData = this.productionData %}
+    {% if productionData|length > 0 %}
+        <div class="card mb-6">
+            <div class="card-header">
+                <h3 class="card-title">Évolution de la Production</h3>
+                <div class="text-sm text-gray-500">
+                    Période: {{ periode|title }} | {{ stats.jours_production }} jours de production
+                </div>
+            </div>
+            <div class="p-6">
+                <div class="space-y-2">
+                    {% for production in productionData|slice(-14) %}
+                        {% set pourcentageObjectif = objectifs.objectif_jour > 0 ? (production.quantite / objectifs.objectif_jour * 100) : 0 %}
+                        <div class="flex items-center">
+                            <div class="w-20 text-sm text-gray-600">
+                                {{ production.date|date('d/m') }}
+                            </div>
+                            <div class="flex-1 mx-4">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-xs text-gray-500">{{ production.quantite }} œufs</span>
+                                    <span class="text-xs {{ pourcentageObjectif >= 100 ? 'text-green-600' : (pourcentageObjectif >= 80 ? 'text-yellow-600' : 'text-red-600') }}">
+                                        {{ pourcentageObjectif|round }}% objectif
+                                    </span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-3">
+                                    <div class="h-3 rounded-full {{ pourcentageObjectif >= 100 ? 'bg-green-500' : (pourcentageObjectif >= 80 ? 'bg-yellow-500' : 'bg-red-500') }}" 
+                                         style="width: {{ min(pourcentageObjectif, 100) }}%"></div>
+                                </div>
+                            </div>
+                            <div class="w-16 text-right">
+                                <span class="text-sm font-medium text-gray-900">{{ production.quantite }}</span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Détail par lot -->
+    {% set volailles = this.volaillesPondeuses %}
+    {% if volailles|length > 0 %}
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Performance par Lot de Pondeuses</h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Lot</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Race</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Effectif</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Âge</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Taux Ponte</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Statut</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for volaille in volailles %}
+                            {% set tauxPonte = (stats.moyenne / volaille.nombreTete * 100)|round(1) %}
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    {{ volaille.numeroLot }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {{ volaille.race }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    {{ volaille.nombreTete|number_format(0, ',', ' ') }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    {{ volaille.ageEnSemaines }} sem.
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="text-sm font-medium {{ tauxPonte >= 80 ? 'text-green-600' : (tauxPonte >= 60 ? 'text-yellow-600' : 'text-red-600') }}">
+                                        {{ tauxPonte }}%
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    {% if tauxPonte >= 80 %}
+                                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                            Excellent
+                                        </span>
+                                    {% elseif tauxPonte >= 60 %}
+                                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                            Correct
+                                        </span>
+                                    {% else %}
+                                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                                            Faible
+                                        </span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% endif %}
+</div>

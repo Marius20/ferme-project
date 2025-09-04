@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-full">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{% block title %}Gestion d'Élevage{% endblock %}</title>
+        
+        <!-- Favicon -->
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>🚜</text></svg>">
+        
+        <!-- Meta tags -->
+        <meta name="description" content="{% block meta_description %}Application complète de gestion d'élevage multi-fermes{% endblock %}">
+        <meta name="author" content="Farm Management System">
+        
+        {% block stylesheets %}
+            {{ encore_entry_link_tags('app') }}
+        {% endblock %}
+
+        {% block javascripts %}
+            {{ encore_entry_script_tags('app') }}
+        {% endblock %}
+    </head>
+    <body class="h-full bg-gray-50 flex">
+        <!-- Sidebar à gauche style Stripe -->
+        <div class="w-60 bg-white border-r border-gray-200 flex flex-col h-screen fixed left-0 top-0">
+            <!-- Header du sidebar avec logo et dropdown -->
+            <div class="px-4 py-4 border-b border-gray-200 bg-white">
+                <div class="flex items-center justify-between">
+                    <!-- Logo avec dropdown -->
+                    {% if ferme_active or fermes_disponibles|length > 0 %}
+                        <div class="flex items-center space-x-2" x-data="{ open: false }">
+                            <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                                <span class="text-white text-sm font-bold">🚜</span>
+                            </div>
+                            <div class="relative flex-1 min-w-0">
+                                <button @click="open = !open" @click.away="open = false" class="flex items-center text-left w-full cursor-pointer hover:text-blue-600 transition-colors">
+                                    <span class="text-sm font-semibold text-gray-900 truncate">
+                                        {% if ferme_active %}{{ ferme_active.nom }}{% else %}FARMMANAGER{% endif %}
+                                    </span>
+                                    <svg class="w-4 h-4 ml-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                </button>
+                                <!-- Dropdown menu -->
+                                <div x-show="open" x-transition class="absolute top-full left-0 mt-1 w-64 bg-white rounded-md shadow-lg border border-gray-200 z-50">
+                                    <div class="py-1">
+                                        {% if ferme_active %}
+                                            <a href="{{ path('dashboard_ferme', {id: ferme_active.id}) }}" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                <div class="w-6 h-6 bg-blue-500 rounded text-white text-xs flex items-center justify-center mr-3">{{ ferme_active.nom|slice(0,1)|upper }}</div>
+                                                {{ ferme_active.nom }}
+                                            </a>
+                                            <div class="border-t border-gray-100 my-1"></div>
+                                        {% endif %}
+                                        {% for ferme in fermes_disponibles %}
+                                            {% if not ferme_active or ferme.id != ferme_active.id %}
+                                                <a href="{{ path('dashboard_ferme', {id: ferme.id}) }}" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                    <div class="w-6 h-6 bg-gray-400 rounded text-white text-xs flex items-center justify-center mr-3">{{ ferme.nom|slice(0,1)|upper }}</div>
+                                                    {{ ferme.nom }}
+                                                </a>
+                                            {% endif %}
+                                        {% endfor %}
+                                        <div class="border-t border-gray-100 my-1"></div>
+                                        <a href="{{ path('app_home') }}" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                            <svg class="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                            </svg>
+                                            Toutes les fermes
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="flex items-center space-x-2">
+                            <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                                <span class="text-white text-sm font-bold">🚜</span>
+                            </div>
+                            <span class="text-sm font-semibold text-gray-900">FARMMANAGER</span>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Navigation menu -->
+            <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+                {% block navigation %}
+                    <a href="{% if ferme_active %}{{ path('dashboard_ferme', {id: ferme_active.id}) }}{% else %}{{ path('app_home') }}{% endif %}" class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors {% if app.request.get('_route') starts with 'dashboard' %}bg-blue-100 text-blue-700{% else %}text-gray-600 hover:bg-gray-100 hover:text-gray-900{% endif %}">
+                        <svg class="w-5 h-5 mr-3 {% if app.request.get('_route') starts with 'dashboard' %}text-blue-500{% else %}text-gray-400 group-hover:text-gray-500{% endif %}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                        </svg>
+                        Accueil
+                    </a>
+                    <a href="{% if ferme_active %}{{ path('betail_index', {fermeId: ferme_active.id}) }}{% else %}#{% endif %}" class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors {% if app.request.get('_route') starts with 'betail' %}bg-blue-100 text-blue-700{% else %}text-gray-600 hover:bg-gray-100 hover:text-gray-900{% endif %}">
+                        <svg class="w-5 h-5 mr-3 {% if app.request.get('_route') starts with 'betail' %}text-blue-500{% else %}text-gray-400 group-hover:text-gray-500{% endif %}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
+                        </svg>
+                        Bétail
+                    </a>
+                    <a href="{% if ferme_active %}{{ path('batiment_ferme', {id: ferme_active.id}) }}{% else %}#{% endif %}" class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors {% if app.request.get('_route') starts with 'batiment' or app.request.get('_route') starts with 'zone' %}bg-blue-100 text-blue-700{% else %}text-gray-600 hover:bg-gray-100 hover:text-gray-900{% endif %}">
+                        <svg class="w-5 h-5 mr-3 {% if app.request.get('_route') starts with 'batiment' or app.request.get('_route') starts with 'zone' %}text-blue-500{% else %}text-gray-400 group-hover:text-gray-500{% endif %}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                        </svg>
+                        Zones & Bâtiments
+                    </a>
+                    <a href="{{ path('volailles') ?? '#' }}" class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors {% if app.request.get('_route') starts with 'volaille' %}bg-blue-100 text-blue-700{% else %}text-gray-600 hover:bg-gray-100 hover:text-gray-900{% endif %}">
+                        <svg class="w-5 h-5 mr-3 {% if app.request.get('_route') starts with 'volaille' %}text-blue-500{% else %}text-gray-400 group-hover:text-gray-500{% endif %}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3l14 9-14 9V3zM19 12H9"></path>
+                        </svg>
+                        Volailles
+                    </a>
+                    <a href="{{ path('stocks') ?? '#' }}" class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors {% if app.request.get('_route') == 'stocks' %}bg-blue-100 text-blue-700{% else %}text-gray-600 hover:bg-gray-100 hover:text-gray-900{% endif %}">
+                        <svg class="w-5 h-5 mr-3 {% if app.request.get('_route') == 'stocks' %}text-blue-500{% else %}text-gray-400 group-hover:text-gray-500{% endif %}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M9 1L5 3l4 2 4-2-4-2zM1 21h22"></path>
+                        </svg>
+                        Stocks
+                    </a>
+                    <a href="{{ path('finances') ?? '#' }}" class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors {% if app.request.get('_route') starts with 'finances' %}bg-blue-100 text-blue-700{% else %}text-gray-600 hover:bg-gray-100 hover:text-gray-900{% endif %}">
+                        <svg class="w-5 h-5 mr-3 {% if app.request.get('_route') starts with 'finances' %}text-blue-500{% else %}text-gray-400 group-hover:text-gray-500{% endif %}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                        </svg>
+                        Finances
+                    </a>
+                    <a href="{{ path('personnel') ?? '#' }}" class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors {% if app.request.get('_route') starts with 'personnel' %}bg-blue-100 text-blue-700{% else %}text-gray-600 hover:bg-gray-100 hover:text-gray-900{% endif %}">
+                        <svg class="w-5 h-5 mr-3 {% if app.request.get('_route') starts with 'personnel' %}text-blue-500{% else %}text-gray-400 group-hover:text-gray-500{% endif %}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                        Personnel
+                    </a>
+
+                {% endblock %}
+            </nav>
+        </div>
+
+        <!-- Main content area -->
+        <div class="flex-1 flex flex-col ml-60">
+            <!-- Header fixe style Stripe -->
+            <header class="bg-white border-b border-gray-200 h-16 fixed top-0 z-40" style="left: 15rem; right: 17px;">
+                <div class="h-full px-6 flex items-center justify-between">
+                    <!-- Titre uniquement -->
+                    <div class="flex items-center flex-1">
+                        {% block header %}
+                            <div>
+                                <h1 class="text-lg font-semibold text-gray-900">
+                                    {% block page_title %}{% endblock %}
+                                </h1>
+                                {% if block('page_subtitle') is defined %}
+                                    <p class="text-sm text-gray-500">
+                                        {% block page_subtitle %}{% endblock %}
+                                    </p>
+                                {% endif %}
+                            </div>
+                        {% endblock %}
+                    </div>
+
+                    <!-- Actions droite -->
+                    <div class="flex items-center space-x-3">
+                        {% block header_actions %}{% endblock %}
+                        
+                        <!-- Icônes d'action -->
+                        <div class="flex items-center space-x-1">
+                            {% block user_menu %}
+                                <!-- Notifications/Alertes -->
+                                <button class="relative p-2 text-gray-400 hover:text-gray-600 rounded-md hover:bg-gray-100 transition-colors" x-data="{ hasAlert: true }">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5h5zM4 12l8-8v6h8l-8 8V12z"></path>
+                                    </svg>
+                                    <!-- Badge d'alerte -->
+                                    <span x-show="hasAlert" class="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full"></span>
+                                </button>
+                                
+                                <!-- User avatar -->
+                                <div class="ml-3 flex items-center">
+                                    <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                                        <span class="text-white text-xs font-medium">U</span>
+                                    </div>
+                                </div>
+                            {% endblock %}
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Flash messages -->
+            {% if app.flashes %}
+                <div class="mt-16 px-6 pt-4">
+                    {% for type, messages in app.flashes %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ type == 'notice' ? 'success' : type }} mb-4">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <!-- Main content -->
+            <main class="flex-1 h-screen overflow-y-auto pt-24 {% block main_classes %}p-6{% endblock %}">            
+                {% block body %}{% endblock %}
+            </main>
+        </div>
+
+        <!-- Toast Container -->
+        <div id="toast-container" class="fixed top-20 right-4 z-50 space-y-2"></div>
+
+        <!-- Toast JavaScript -->
+        <script>
+            function showToast(message, type = 'success') {
+                const container = document.getElementById('toast-container');
+                const toast = document.createElement('div');
+                
+                const bgColor = type === 'success' ? 'bg-green-600' : type === 'error' ? 'bg-red-600' : 'bg-blue-600';
+                const icon = type === 'success' 
+                    ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>'
+                    : type === 'error'
+                    ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>'
+                    : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>';
+                
+                toast.className = `transform transition-all duration-300 opacity-0 translate-x-full ${bgColor} text-white px-6 py-4 rounded-lg shadow-lg max-w-sm`;
+                toast.innerHTML = `
+                    <div class="flex items-center">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            ${icon}
+                        </svg>
+                        <p class="font-medium">${message}</p>
+                        <button onclick="removeToast(this)" class="ml-4 hover:opacity-70">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                `;
+                
+                container.appendChild(toast);
+                
+                // Animation d'entrée
+                setTimeout(() => {
+                    toast.classList.remove('opacity-0', 'translate-x-full');
+                }, 100);
+                
+                // Auto-suppression après 5 secondes
+                setTimeout(() => {
+                    removeToast(toast.querySelector('button'));
+                }, 5000);
+            }
+            
+            function removeToast(button) {
+                const toast = button.closest('div').parentElement;
+                toast.classList.add('opacity-0', 'translate-x-full');
+                setTimeout(() => toast.remove(), 300);
+            }
+        </script>
+
+        {% block additional_scripts %}{% endblock %}
+    </body>
+</html>

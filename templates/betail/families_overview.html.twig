@@ -1,0 +1,800 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Gestion du Bétail - {{ parent() }}{% endblock %}
+
+{% block page_title %}Gestion du Bétail{% endblock %}
+{% block page_subtitle %}Vue d'ensemble des familles d'animaux{% endblock %}
+
+{% block header_actions %}
+    <div class="flex space-x-3">
+        <button class="btn btn-primary" onclick="openAddFamilyModal()">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+            Nouvelle famille de bétail
+        </button>
+        <button class="btn btn-outline" onclick="exportFamilies()">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            Exporter
+        </button>
+    </div>
+{% endblock %}
+
+{% block body %}
+    <!-- Statistiques globales -->
+    <div class="mb-6">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">Statistiques Globales</h2>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        {% set totalAnimaux = 0 %}
+        {% for famille in statistiquesFamilles %}
+            {% set totalAnimaux = totalAnimaux + famille.effectif %}
+        {% endfor %}
+        
+        <div class="stat-card">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Total Bétail</p>
+                    <p class="text-3xl font-bold text-gray-900">{{ totalAnimaux }}</p>
+                    <p class="text-xs text-gray-500">animaux actifs</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-7 h-7 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Familles</p>
+                    <p class="text-3xl font-bold text-green-600">{{ statistiquesFamilles|length }}</p>
+                    <p class="text-xs text-gray-500">types d'élevage</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-7 h-7 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Croissance</p>
+                    <p class="text-3xl font-bold text-orange-600">+12%</p>
+                    <p class="text-xs text-gray-500">ce mois-ci</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grille des familles d'animaux -->
+    <div class="mb-6">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">Familles d'Animaux</h2>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for typeKey, famille in statistiquesFamilles %}
+            <div class="card hover:shadow-lg transition-shadow cursor-pointer" onclick="navigateToFamily('{{ typeKey }}')">
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 rounded-full flex items-center justify-center text-2xl 
+                                {% if typeKey == 'bovin' %}bg-purple-100 text-purple-600
+                                {% elseif typeKey == 'ovin' %}bg-yellow-100 text-yellow-600  
+                                {% elseif typeKey == 'caprin' %}bg-green-100 text-green-600
+                                {% elseif typeKey == 'porcin' %}bg-pink-100 text-pink-600
+                                {% elseif typeKey == 'equin' %}bg-blue-100 text-blue-600
+                                {% else %}bg-gray-100 text-gray-600{% endif %}">
+                                {% if typeKey == 'bovin' %}🐄
+                                {% elseif typeKey == 'ovin' %}🐑
+                                {% elseif typeKey == 'caprin' %}🐐
+                                {% elseif typeKey == 'porcin' %}🐷
+                                {% elseif typeKey == 'equin' %}🐎
+                                {% else %}🐾{% endif %}
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-xl font-bold text-gray-900">{{ famille.nom }}</h3>
+                                <p class="text-sm text-gray-500">{{ famille.sousTypes|length }} sous-types</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-3xl font-bold 
+                                {% if typeKey == 'bovin' %}text-purple-600
+                                {% elseif typeKey == 'ovin' %}text-yellow-600  
+                                {% elseif typeKey == 'caprin' %}text-green-600
+                                {% elseif typeKey == 'porcin' %}text-pink-600
+                                {% elseif typeKey == 'equin' %}text-blue-600
+                                {% else %}text-gray-600{% endif %}">
+                                {{ famille.effectif }}
+                            </div>
+                            <p class="text-xs text-gray-500">têtes</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <p class="text-sm text-gray-600 leading-relaxed">{{ famille.description }}</p>
+                    </div>
+                    
+                    {% if famille.sousTypes %}
+                        <div class="border-t pt-4">
+                            <p class="text-xs font-medium text-gray-500 mb-2 uppercase tracking-wide">Sous-types disponibles</p>
+                            <div class="flex flex-wrap gap-1">
+                                {% for sousType, sousNom in famille.sousTypes %}
+                                    <span class="inline-flex px-2 py-1 text-xs font-medium rounded-md 
+                                        {% if typeKey == 'bovin' %}bg-purple-50 text-purple-700
+                                        {% elseif typeKey == 'ovin' %}bg-yellow-50 text-yellow-700
+                                        {% elseif typeKey == 'caprin' %}bg-green-50 text-green-700
+                                        {% elseif typeKey == 'porcin' %}bg-pink-50 text-pink-700
+                                        {% elseif typeKey == 'equin' %}bg-blue-50 text-blue-700
+                                        {% else %}bg-gray-50 text-gray-700{% endif %}">
+                                        {{ sousNom }}
+                                    </span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="mt-4 pt-4 border-t flex items-center justify-end">
+                        <div class="flex items-center text-sm text-gray-500">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                            Voir détails
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="col-span-full text-center py-12">
+                <div class="text-center">
+                    <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
+                    </svg>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">Aucun bétail enregistré</h3>
+                    <p class="text-gray-500">Commencez par ajouter vos premiers animaux à la ferme.</p>
+                    <button class="btn btn-primary mt-4" onclick="addNewAnimal()">Ajouter un animal</button>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Modal d'ajout de famille de bétail -->
+    <div id="addFamilyModal" class="fixed inset-0 z-50 hidden transition-opacity duration-300 opacity-0">
+        <!-- Overlay avec backdrop blur -->
+        <div class="fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity"></div>
+        
+        <!-- Contenu de la modal -->
+        <div class="fixed inset-0 overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-4">
+                <div class="relative w-full max-w-2xl transform scale-95 transition-all duration-300 bg-white rounded-2xl shadow-xl">
+                    <!-- Header -->
+                    <div class="flex items-center justify-between p-6 border-b border-gray-200">
+                        <h3 class="text-xl font-semibold text-gray-900">Nouvelle Famille de Bétail</h3>
+                        <button type="button" onclick="closeAddFamilyModal()" class="rounded-full p-1 text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <!-- Body -->
+                    <div class="max-h-[70vh] overflow-y-auto p-6">
+                        <!-- Mode Selection -->
+                        <div class="mb-6">
+                            <div class="flex bg-gray-100 rounded-lg p-1 mb-4">
+                                <button type="button" id="mode-associate" class="flex-1 px-4 py-2 text-sm font-medium rounded-md bg-white text-blue-600 shadow-sm" onclick="switchMode('associate')">
+                                    Associer existante
+                                </button>
+                                <button type="button" id="mode-create" class="flex-1 px-4 py-2 text-sm font-medium rounded-md text-gray-600 hover:text-gray-900" onclick="switchMode('create')">
+                                    Créer nouvelle
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Associate Mode Form -->
+                        <form id="associateForm" class="block" onsubmit="submitAssociateFamily(event)">
+                            <div class="mb-6">
+                                <label for="existing-family" class="block text-sm font-medium leading-6 text-gray-900 mb-2">Famille disponible</label>
+                                <select id="existing-family" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6" required>
+                                    <option value="">Sélectionner une famille</option>
+                                    {% for famille in famillesDisponibles %}
+                                        <option value="{{ famille.id }}">{{ famille.nom }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-6">
+                                <label for="family-description" class="block text-sm font-medium leading-6 text-gray-900 mb-2">Description personnalisée (optionnel)</label>
+                                <textarea id="family-description" rows="3" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6" placeholder="Ajouter une description personnalisée pour cette ferme..."></textarea>
+                            </div>
+                            <div class="flex justify-end space-x-3">
+                                <button type="button" onclick="closeAddFamilyModal()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    Annuler
+                                </button>
+                                <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    Associer
+                                </button>
+                            </div>
+                        </form>
+
+                        <!-- Create Mode Form -->
+                        <form id="createForm" class="hidden" onsubmit="submitCreateFamily(event)">
+                            <div class="mb-6">
+                                <label for="new-family-name" class="block text-sm font-medium leading-6 text-gray-900 mb-2">Nom de la nouvelle famille</label>
+                                <input type="text" id="new-family-name" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6" placeholder="Ex: Lapins, Alpagas, Chèvres naines...">
+                            </div>
+                            <div class="mb-6">
+                                <label for="new-family-description" class="block text-sm font-medium leading-6 text-gray-900 mb-2">Description</label>
+                                <textarea id="new-family-description" rows="3" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6" placeholder="Description de cette famille d'animaux..."></textarea>
+                            </div>
+                            <div class="flex justify-end space-x-3">
+                                <button type="button" onclick="closeAddFamilyModal()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    Annuler
+                                </button>
+                                <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500">
+                                    Créer
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal d'ajout de sous-type -->
+    <div id="addSubTypeModal" class="fixed inset-0 z-50 hidden transition-opacity duration-300 opacity-0">
+        <!-- Overlay avec backdrop blur -->
+        <div class="fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity"></div>
+        
+        <!-- Contenu de la modal -->
+        <div class="fixed inset-0 overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-4">
+                <div class="relative w-full max-w-2xl transform scale-95 transition-all duration-300 bg-white rounded-2xl shadow-xl">
+                    <!-- Header -->
+                    <div class="flex items-center justify-between p-6 border-b border-gray-200">
+                        <h3 class="text-xl font-semibold text-gray-900">Nouvelle catégorie d'animal</h3>
+                        <button type="button" onclick="closeAddSubTypeModal()" class="rounded-full p-1 text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <!-- Body -->
+                    <div class="max-h-[70vh] overflow-y-auto p-6">
+                        <form id="addSubTypeForm" onsubmit="submitAddSubType(event)">
+                            <input type="hidden" id="subtype-family-type">
+                            <div class="mb-6">
+                                <label for="subtype-name" class="block text-sm font-medium leading-6 text-gray-900 mb-2">Type de sous-catégorie</label>
+                                <select id="subtype-name" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6" required>
+                                    <option value="">Sélectionner un sous-type</option>
+                                    <!-- Les options seront remplies dynamiquement selon la famille -->
+                                </select>
+                            </div>
+                            <div class="mb-6">
+                                <label for="subtype-description" class="block text-sm font-medium leading-6 text-gray-900 mb-2">Description</label>
+                                <textarea id="subtype-description" rows="2" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6" placeholder="Description du sous-type"></textarea>
+                            </div>
+                            
+                            <!-- Affichage de la famille -->
+                            <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                <p class="text-sm text-blue-800">
+                                    <span class="font-medium">Famille :</span> 
+                                    <span id="subtype-family-display"><!-- Sera rempli dynamiquement --></span>
+                                </p>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- Footer -->
+                    <div class="flex justify-end gap-3 p-6 bg-gray-50 border-t border-gray-200 rounded-b-2xl">
+                        <button type="button" onclick="closeAddSubTypeModal()" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            Annuler
+                        </button>
+                        <button type="submit" form="addSubTypeForm" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            Créer le type
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal d'export -->
+    <div id="exportModal" class="fixed inset-0 z-50 hidden transition-opacity duration-300 opacity-0">
+        <!-- Overlay avec backdrop blur -->
+        <div class="fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity"></div>
+        
+        <!-- Contenu de la modal -->
+        <div class="fixed inset-0 overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-4">
+                <div class="relative w-full max-w-2xl transform scale-95 transition-all duration-300 bg-white rounded-2xl shadow-xl">
+                    <!-- Header -->
+                    <div class="flex items-center justify-between p-6 border-b border-gray-200">
+                        <h3 class="text-xl font-semibold text-gray-900">Exporter les données</h3>
+                        <button type="button" onclick="closeExportModal()" class="rounded-full p-1 text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <!-- Body -->
+                    <div class="max-h-[70vh] overflow-y-auto p-6">
+                        <form id="exportForm" onsubmit="submitExport(event)">
+                            <div class="mb-6">
+                                <label class="block text-sm font-medium leading-6 text-gray-900 mb-3">Format d'export</label>
+                                <div class="space-y-2">
+                                    <label class="flex items-center">
+                                        <input type="radio" name="export-format" value="excel" class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-600" checked>
+                                        <span class="ml-3 block text-sm font-medium leading-6 text-gray-900">Excel (.xlsx)</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="radio" name="export-format" value="csv" class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-600">
+                                        <span class="ml-3 block text-sm font-medium leading-6 text-gray-900">CSV (.csv)</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="radio" name="export-format" value="pdf" class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-600">
+                                        <span class="ml-3 block text-sm font-medium leading-6 text-gray-900">PDF (.pdf)</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="mb-6">
+                                <label class="block text-sm font-medium leading-6 text-gray-900 mb-3">Données à inclure</label>
+                                <div class="space-y-2">
+                                    <label class="flex items-center">
+                                        <input type="checkbox" name="export-data" value="families" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600" checked>
+                                        <span class="ml-3 block text-sm font-medium leading-6 text-gray-900">Statistiques par famille</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" name="export-data" value="animals" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600">
+                                        <span class="ml-3 block text-sm font-medium leading-6 text-gray-900">Liste détaillée des animaux</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" name="export-data" value="medical" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600">
+                                        <span class="ml-3 block text-sm font-medium leading-6 text-gray-900">Données médicales</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" name="export-data" value="breeding" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600">
+                                        <span class="ml-3 block text-sm font-medium leading-6 text-gray-900">Données de reproduction</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- Footer -->
+                    <div class="flex justify-end gap-3 p-6 bg-gray-50 border-t border-gray-200 rounded-b-2xl">
+                        <button type="button" onclick="closeExportModal()" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            Annuler
+                        </button>
+                        <button type="submit" form="exportForm" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500">
+                            Exporter
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function navigateToFamily(type) {
+            window.location.href = "{{ path('betail_famille', {fermeId: fermeActive.id, nomFamille: 'TYPE_PLACEHOLDER'}) }}".replace('TYPE_PLACEHOLDER', type);
+        }
+        
+        function addNewAnimal(type, familyType) {
+            // Ouvrir la modal d'ajout de sous-type pour cette famille
+            openAddSubTypeModal(type, familyType);
+        }
+
+        // Modal d'ajout de famille
+        function openAddFamilyModal() {
+            document.body.style.overflow = 'hidden';
+            const modal = document.getElementById('addFamilyModal');
+            modal.classList.remove('hidden');
+            
+            // Animation d'ouverture
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.querySelector('.transform').classList.remove('scale-95');
+                modal.querySelector('.transform').classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeAddFamilyModal() {
+            document.body.style.overflow = 'auto';
+            const modal = document.getElementById('addFamilyModal');
+            
+            // Animation de fermeture
+            modal.classList.add('opacity-0');
+            modal.querySelector('.transform').classList.remove('scale-100');
+            modal.querySelector('.transform').classList.add('scale-95');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                // Reset forms
+                document.getElementById('existing-family').value = '';
+                document.getElementById('family-description').value = '';
+                document.getElementById('new-family-name').value = '';
+                document.getElementById('new-family-description').value = '';
+                // Reset to associate mode
+                switchMode('associate');
+            }, 300);
+        }
+
+        function switchMode(mode) {
+            const associateBtn = document.getElementById('mode-associate');
+            const createBtn = document.getElementById('mode-create');
+            const associateForm = document.getElementById('associateForm');
+            const createForm = document.getElementById('createForm');
+
+            if (mode === 'associate') {
+                associateBtn.className = 'flex-1 px-4 py-2 text-sm font-medium rounded-md bg-white text-blue-600 shadow-sm';
+                createBtn.className = 'flex-1 px-4 py-2 text-sm font-medium rounded-md text-gray-600 hover:text-gray-900';
+                associateForm.className = 'block';
+                createForm.className = 'hidden';
+            } else {
+                associateBtn.className = 'flex-1 px-4 py-2 text-sm font-medium rounded-md text-gray-600 hover:text-gray-900';
+                createBtn.className = 'flex-1 px-4 py-2 text-sm font-medium rounded-md bg-white text-green-600 shadow-sm';
+                associateForm.className = 'hidden';
+                createForm.className = 'block';
+            }
+        }
+
+        function submitAssociateFamily(event) {
+            event.preventDefault();
+            const familleId = document.getElementById('existing-family').value;
+            const description = document.getElementById('family-description').value;
+
+            if (!familleId) {
+                alert('Veuillez sélectionner une famille');
+                return;
+            }
+
+            const familyData = {
+                familleId: familleId,
+                descriptifPersonnalise: description
+            };
+
+            fetch(`{{ path('betail_famille_associate', {fermeId: fermeActive.id}) }}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(familyData)
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log('Response data:', data);
+                if (data.success) {
+                    alert('Famille associée avec succès!');
+                    closeAddFamilyModal();
+                    window.location.reload();
+                } else {
+                    alert('Erreur: ' + data.message);
+                    if (data.trace) {
+                        console.error('Stack trace:', data.trace);
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Erreur complète:', error);
+                alert('Une erreur est survenue lors de l\'association de la famille: ' + error.message);
+            });
+        }
+
+        function submitCreateFamily(event) {
+            event.preventDefault();
+            const nom = document.getElementById('new-family-name').value.trim();
+            const description = document.getElementById('new-family-description').value.trim();
+
+            if (!nom) {
+                alert('Veuillez saisir un nom pour la famille');
+                return;
+            }
+
+            const familyData = {
+                nom: nom,
+                description: description
+            };
+
+            fetch(`{{ path('betail_famille_create_global') }}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(familyData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Nouvelle famille créée avec succès!');
+                    closeAddFamilyModal();
+                    window.location.reload();
+                } else {
+                    alert('Erreur: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                alert('Une erreur est survenue lors de la création de la famille');
+            });
+        }
+
+        // Modal d'ajout de sous-type
+        function openAddSubTypeModal(familyType, familyName) {
+            document.getElementById('subtype-family-type').value = familyType;
+            
+            // Mettre à jour l'affichage de la famille
+            const familyDisplay = document.getElementById('subtype-family-display');
+            familyDisplay.textContent = `Famille de ${familyName.toLowerCase()}`;
+            
+            // Remplir le select des sous-types selon la famille
+            populateSubTypeOptions(familyType);
+            
+            document.body.style.overflow = 'hidden';
+            const modal = document.getElementById('addSubTypeModal');
+            modal.classList.remove('hidden');
+            
+            // Animation d'ouverture
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.querySelector('.transform').classList.remove('scale-95');
+                modal.querySelector('.transform').classList.add('scale-100');
+            }, 10);
+        }
+        
+        function populateSubTypeOptions(familyType) {
+            const subTypeSelect = document.getElementById('subtype-name');
+            subTypeSelect.innerHTML = '<option value="">Sélectionner un sous-type</option>';
+            
+            const subTypesMap = {
+                'bovin': [
+                    {value: 'vache', label: 'Vache'},
+                    {value: 'taureau', label: 'Taureau'},
+                    {value: 'boeuf', label: 'Bœuf'},
+                    {value: 'genisse', label: 'Génisse'},
+                    {value: 'veau', label: 'Veau'},
+                ],
+                'ovin': [
+                    {value: 'mouton', label: 'Mouton'},
+                    {value: 'brebis', label: 'Brebis'},
+                    {value: 'belier', label: 'Bélier'},
+                    {value: 'agneau', label: 'Agneau'},
+                ],
+                'caprin': [
+                    {value: 'chevre', label: 'Chèvre'},
+                    {value: 'bouc', label: 'Bouc'},
+                    {value: 'chevreau', label: 'Chevreau'},
+                ],
+                'porcin': [
+                    {value: 'porc', label: 'Porc'},
+                    {value: 'truie', label: 'Truie'},
+                    {value: 'verrat', label: 'Verrat'},
+                    {value: 'porcelet', label: 'Porcelet'},
+                ],
+                'equin': [
+                    {value: 'cheval', label: 'Cheval'},
+                    {value: 'jument', label: 'Jument'},
+                    {value: 'ane', label: 'Âne'},
+                    {value: 'mule', label: 'Mule'},
+                    {value: 'poulain', label: 'Poulain'},
+                ]
+            };
+            
+            // Récupérer les sous-types existants pour cette famille
+            const existingSubTypes = getExistingSubTypes(familyType);
+            
+            const subTypes = subTypesMap[familyType] || [];
+            subTypes.forEach(subType => {
+                // Ne pas afficher les sous-types qui existent déjà
+                if (!existingSubTypes.includes(subType.value)) {
+                    const option = document.createElement('option');
+                    option.value = subType.value;
+                    option.textContent = subType.label;
+                    subTypeSelect.appendChild(option);
+                }
+            });
+        }
+        
+        function getExistingSubTypes(familyType) {
+            // Cette fonction devrait retourner les sous-types déjà existants
+            // Pour cette implémentation, on simule avec des données statiques
+            // Dans une vraie application, cela viendrait du serveur
+            const existingData = {
+                {% for typeKey, famille in statistiquesFamilles %}
+                    {% if famille.sousTypes %}
+                        '{{ typeKey }}': [{% for sousTypeKey, sousType in famille.sousTypes %}'{{ sousTypeKey }}'{% if not loop.last %}, {% endif %}{% endfor %}],
+                    {% endif %}
+                {% endfor %}
+            };
+            
+            return existingData[familyType] || [];
+        }
+
+        function closeAddSubTypeModal() {
+            document.body.style.overflow = 'auto';
+            const modal = document.getElementById('addSubTypeModal');
+            
+            // Animation de fermeture
+            modal.classList.add('opacity-0');
+            modal.querySelector('.transform').classList.remove('scale-100');
+            modal.querySelector('.transform').classList.add('scale-95');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                document.getElementById('subtype-name').value = '';
+                document.getElementById('subtype-description').value = '';
+            }, 300);
+        }
+
+        function submitAddSubType(event) {
+            event.preventDefault();
+            const familyType = document.getElementById('subtype-family-type').value;
+            const subTypeName = document.getElementById('subtype-name').value;
+            const description = document.getElementById('subtype-description').value;
+
+            if (!subTypeName.trim()) {
+                alert('Veuillez sélectionner un sous-type');
+                return;
+            }
+
+            // Vérifier si le sous-type existe déjà
+            const existingSubTypes = getExistingSubTypes(familyType);
+            if (existingSubTypes.includes(subTypeName)) {
+                alert('Ce sous-type existe déjà pour cette famille d\'animaux');
+                return;
+            }
+
+            // Simuler l'ajout de sous-type (à remplacer par un appel AJAX réel)
+            const subTypeData = {
+                familyType: familyType,
+                subType: subTypeName,
+                description: description
+            };
+
+            console.log('Création de sous-type:', subTypeData);
+            alert('Sous-type créé avec succès! (Fonctionnalité à implémenter côté serveur)');
+            closeAddSubTypeModal();
+        }
+
+        // Modal d'export
+        function exportFamilies() {
+            document.body.style.overflow = 'hidden';
+            const modal = document.getElementById('exportModal');
+            modal.classList.remove('hidden');
+            
+            // Animation d'ouverture
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.querySelector('.transform').classList.remove('scale-95');
+                modal.querySelector('.transform').classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeExportModal() {
+            document.body.style.overflow = 'auto';
+            const modal = document.getElementById('exportModal');
+            
+            // Animation de fermeture
+            modal.classList.add('opacity-0');
+            modal.querySelector('.transform').classList.remove('scale-100');
+            modal.querySelector('.transform').classList.add('scale-95');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        function submitExport(event) {
+            event.preventDefault();
+            const format = document.querySelector('input[name="export-format"]:checked').value;
+            const selectedData = Array.from(document.querySelectorAll('input[name="export-data"]:checked')).map(cb => cb.value);
+
+            if (selectedData.length === 0) {
+                alert('Veuillez sélectionner au moins un type de données à exporter');
+                return;
+            }
+
+            // Simuler l'export (à remplacer par un appel réel au serveur)
+            const exportData = {
+                format: format,
+                data: selectedData,
+                timestamp: new Date().toISOString()
+            };
+
+            console.log('Export demandé:', exportData);
+            
+            // Simuler le téléchargement
+            const filename = `betail-export-${new Date().toISOString().split('T')[0]}.${format === 'excel' ? 'xlsx' : format}`;
+            alert(`Export en cours...\nFormat: ${format.toUpperCase()}\nFichier: ${filename}\n(Fonctionnalité à implémenter côté serveur)`);
+            
+            closeExportModal();
+        }
+
+        // Gestion du type de famille personnalisé
+        document.addEventListener('DOMContentLoaded', function() {
+            const familyTypeSelect = document.getElementById('family-type');
+            const customNameDiv = document.getElementById('custom-family-name');
+            const customNameInput = document.getElementById('custom-name');
+
+            if (familyTypeSelect) {
+                familyTypeSelect.addEventListener('change', function() {
+                    const selectedType = this.value;
+                    const descriptionField = document.getElementById('family-description');
+                    
+                    if (selectedType === 'autre') {
+                        customNameDiv.classList.remove('hidden');
+                        customNameInput.required = true;
+                        descriptionField.value = '';
+                    } else {
+                        customNameDiv.classList.add('hidden');
+                        customNameInput.required = false;
+                        customNameInput.value = '';
+                        
+                        // Auto-remplir la description avec les types possibles
+                        const familyDescriptions = {
+                            'bovin': ' Veau, Vache, Bœuf, Génisse, Taureau',
+                            'ovin': ' Agneau, Mouton, Brebis, Bélier',
+                            'caprin': ' Chevreau, Chèvre, Bouc',
+                            'porcin': ' Porcelet, Porc, Truie, Verrat',
+                            'equin': ' Poulain, Cheval, Jument, Âne, Mule'
+                        };
+                        
+                        if (familyDescriptions[selectedType]) {
+                            descriptionField.value = familyDescriptions[selectedType];
+                        } else {
+                            descriptionField.value = '';
+                        }
+                    }
+                });
+            }
+
+            // Fermer les modales avec Escape
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    // Vérifier quelle modal est ouverte et la fermer avec animation
+                    if (!document.getElementById('addFamilyModal').classList.contains('hidden')) {
+                        closeAddFamilyModal();
+                    } else if (!document.getElementById('addSubTypeModal').classList.contains('hidden')) {
+                        closeAddSubTypeModal();
+                    } else if (!document.getElementById('exportModal').classList.contains('hidden')) {
+                        closeExportModal();
+                    }
+                }
+            });
+
+            // Fermeture au clic sur l'overlay
+            document.querySelectorAll('[id$="Modal"]').forEach(modal => {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal || e.target.classList.contains('fixed')) {
+                        if (modal.id === 'addFamilyModal') closeAddFamilyModal();
+                        else if (modal.id === 'addSubTypeModal') closeAddSubTypeModal();
+                        else if (modal.id === 'exportModal') closeExportModal();
+                    }
+                });
+            });
+        });
+    </script>
+{% endblock %}
